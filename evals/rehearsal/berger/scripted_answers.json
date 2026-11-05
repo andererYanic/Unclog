@@ -1,0 +1,206 @@
+{
+  "extraction": {
+    "goal_statement": "Mehr Küchen und Einbaumöbel mit vernünftiger Marge verkaufen",
+    "unit_of_throughput": "bezahlter Auftrag (Küche oder Einbauschrank)",
+    "metrics": [
+      {
+        "domain": "RACE-A",
+        "name": "Anfragen",
+        "value": 55,
+        "unit": "pro Monat",
+        "period": "Monat",
+        "is_estimate": true,
+        "quote": "Wir kriegen so 50, 60 Anfragen im Monat",
+        "locator": "t=00:02:10.000"
+      },
+      {
+        "domain": "RACE-C",
+        "name": "Kunden wartend auf Aufmaß",
+        "value": 20,
+        "unit": "Kunden",
+        "period": "aktuell",
+        "is_estimate": true,
+        "quote": "Im Moment warten bestimmt 20 Kunden auf einen Aufmaßtermin",
+        "locator": "t=00:05:10.000"
+      },
+      {
+        "domain": "RACE-C",
+        "name": "Angebot -> Auftrag",
+        "value": 0.5,
+        "unit": "ratio",
+        "period": "laufend",
+        "is_estimate": true,
+        "quote": "knapp die Hälfte zum Auftrag",
+        "locator": "t=00:06:00.000"
+      }
+    ],
+    "steps": [
+      {
+        "name": "Aufmaß",
+        "domain": "RACE-C",
+        "performed_by": "Inhaber",
+        "batching": "freitags und samstags",
+        "quote": "Das Aufmaß mache ich selbst, immer freitags und samstags.",
+        "locator": "t=00:04:20.000"
+      }
+    ],
+    "policies": [
+      {
+        "kind": "rule",
+        "statement": "Nur der Inhaber macht das Aufmaß",
+        "quote": "Da will ich keinen anderen ranlassen",
+        "locator": "t=00:04:20.000"
+      }
+    ],
+    "probes": [
+      {
+        "probe": "absence",
+        "answer_summary": "Ohne Inhaber kein Aufmaß",
+        "quote": "Wenn ich im Urlaub bin, passiert beim Aufmaß gar nichts",
+        "locator": "t=00:08:30.000"
+      },
+      {
+        "probe": "expedite",
+        "answer_summary": "Kunden fragen mehrfach nach",
+        "quote": "Manche Kunden rufen zwei, drei Mal an",
+        "locator": "t=00:09:05.000"
+      },
+      {
+        "probe": "ownership",
+        "answer_summary": "Werkstattleiter könnte Aufmaß übernehmen",
+        "quote": "Mein Werkstattleiter Markus könnte das Aufmaß bestimmt auch",
+        "locator": "t=00:10:20.000"
+      }
+    ],
+    "open_questions": [
+      "Wie lange dauert ein Aufmaß inkl. Fahrt?",
+      "Wie viele Stunden pro Woche hat der Inhaber für Aufmaße?"
+    ],
+    "confidence": 0.75
+  },
+  "tree": {
+    "nodes": [
+      {
+        "id": "a1",
+        "parent_id": "opt-policy",
+        "statement": "Werkstattleiter Markus übernimmt nach 2 begleiteten Terminen die Hälfte der rund 9 Aufmaße pro Woche",
+        "kind": "base_action",
+        "constraint_link": "acts_on",
+        "focus_step": "exploit",
+        "tag": "non_ai",
+        "effort_days": 5
+      },
+      {
+        "id": "a2",
+        "parent_id": "opt-exploit-idle",
+        "statement": "Aufmaßtermine auch dienstags und donnerstags anbieten statt nur freitags und samstags",
+        "kind": "base_action",
+        "constraint_link": "acts_on",
+        "focus_step": "exploit",
+        "tag": "non_ai",
+        "effort_days": 1
+      },
+      {
+        "id": "a3",
+        "parent_id": "opt-exploit-quality",
+        "statement": "Vor jedem Aufmaß Fotos, Grundriss und Budget vom Kunden einholen und als Vorlage vorbereiten (ca. 9 Vorlagen pro Woche)",
+        "kind": "base_action",
+        "constraint_link": "protects",
+        "focus_step": "exploit",
+        "tag": "ai_doable",
+        "effort_days": 4
+      },
+      {
+        "id": "a4",
+        "parent_id": "opt-subordinate",
+        "statement": "Keine Google-Anzeigen schalten, solange mehr als 10 Kunden auf ein Aufmaß warten",
+        "kind": "base_action",
+        "constraint_link": "gates_flow",
+        "focus_step": "subordinate",
+        "tag": "non_ai",
+        "effort_days": 1
+      },
+      {
+        "id": "a5",
+        "parent_id": "opt-elevate",
+        "statement": "Zweiten Aufmaß-Laser und Tablet-Aufmaß-App für Markus anschaffen (Aufmaß 2 h -> 1,5 h)",
+        "kind": "base_action",
+        "constraint_link": "acts_on",
+        "focus_step": "elevate",
+        "tag": "human",
+        "effort_days": 5
+      },
+      {
+        "id": "x1",
+        "parent_id": "root",
+        "statement": "KI-Chatbot auf der Website für mehr Anfragen",
+        "kind": "base_action",
+        "constraint_link": "off_constraint",
+        "focus_step": "exploit",
+        "tag": "ai_doable",
+        "effort_days": 5
+      }
+    ],
+    "open_questions": [],
+    "confidence": 0.7
+  },
+  "analyst": {
+    "judgements": [
+      {
+        "seed_id": "a3",
+        "pattern_id": "constraint-prestaging",
+        "title": "Aufmaß-Vorlage aus Kundenfotos, Grundriss und Budget für ca. 9 Termine pro Woche aus dem CRM vorbereiten",
+        "ai_role": "assist",
+        "human_in_loop_design": "Büro prüft jede Vorlage vor dem Termin; der Aufmesser korrigiert vor Ort",
+        "release_gate_design": "genau eine Vorlage je bestätigtem Termin, nicht mehr",
+        "items_per_week": 9,
+        "review_minutes_per_item": 5,
+        "reviewer_resource_id": "buero",
+        "output_verification": "Aufmesser bestätigt Maße vor Ort",
+        "cost_of_error": "medium",
+        "client_owner_role": "Büroleitung",
+        "tech_approach": "CRM-Export + Fotos + Prompt",
+        "build_vs_buy": "build",
+        "risks": [
+          {
+            "description": "Kundenfotos enthalten personenbezogene Daten",
+            "category": "compliance",
+            "likelihood": 3,
+            "impact": 2,
+            "mitigation": "Löschfrist, AV-Vertrag mit Anbieter"
+          }
+        ],
+        "scores": {
+          "throughput_impact": {
+            "score": 4,
+            "justification": "vorbereitete Vorlagen verkürzen jedes Aufmaß"
+          },
+          "feasibility": {
+            "score": 4,
+            "justification": "vorbereitete Vorlagen verkürzen jedes Aufmaß"
+          },
+          "data_readiness": {
+            "score": 4,
+            "justification": "vorbereitete Vorlagen verkürzen jedes Aufmaß"
+          },
+          "risk": {
+            "score": 4,
+            "justification": "vorbereitete Vorlagen verkürzen jedes Aufmaß"
+          },
+          "effort": {
+            "score": 4,
+            "justification": "vorbereitete Vorlagen verkürzen jedes Aufmaß"
+          },
+          "strategic_fit": {
+            "score": 4,
+            "justification": "vorbereitete Vorlagen verkürzen jedes Aufmaß"
+          }
+        }
+      }
+    ],
+    "open_questions": [
+      "Gibt es eine Fotofunktion im Anfrageformular?"
+    ],
+    "confidence": 0.7
+  }
+}

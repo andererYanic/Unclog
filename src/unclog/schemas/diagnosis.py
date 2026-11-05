@@ -119,6 +119,12 @@ class FlowNode(Grounded):
     touch_time_h: float | None = Field(None, ge=0)
     wait_time_h: float | None = Field(None, ge=0)
     batch_size: float | None = Field(None, gt=0)
+    patience_h: float | None = Field(
+        None,
+        gt=0,
+        description="items waiting longer than this (calendar h) are lost, e.g. "
+        "customers who stop waiting for an appointment; simulation only",
+    )
 
 
 class FlowEdge(UnclogModel):

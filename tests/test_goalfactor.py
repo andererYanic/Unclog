@@ -135,7 +135,7 @@ def test_policy_branch_required():
 def test_root_goals_from_data():
     c, r = case("backend_fulfillment_flood")
     root = root_goal(r.report.binding, c.graph(), c.metrics, lang="en")
-    assert "workshop" in root.statement and "19.0 to 22.0" in root.statement
+    assert "4 carpenters" in root.statement and "19.0 to 22.0" in root.statement
     assert root.evidence  # grounded in the constraint's evidence
     c, r = case("race_speed_to_lead")
     root = root_goal(r.report.binding, c.graph(), c.metrics, r.report.policy_audit.policies)

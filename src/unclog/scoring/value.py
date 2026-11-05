@@ -273,6 +273,12 @@ def value_opportunity(
             "simulated ΔT is zero: the effect does not move the constraint "
             "(value comes only from ΔI/ΔOE, if any)"
         )
+    dts = [next(ln.delta_t for ln in lines if ln.scenario is lv) for lv in LEVELS]
+    if item.effects and not (dts[0] <= dts[1] <= dts[2]):
+        notes.append(
+            "low/base/high ΔT not in order: simulation noise is larger than the "
+            "difference between levels; use more replications before quoting a range"
+        )
     if any(e.basis == "assumption" for e in item.effects):
         notes.append(
             "effects are assumptions: replace with pilot measurements before promising results"
@@ -364,6 +370,43 @@ def value_portfolio(
     return ValueReport(model, per, portfolio, parts, baseline)
 
 
+_NOTES_DE = (
+    (
+        "effects are assumptions",
+        "Effekte sind Annahmen: vor jeder Zusage durch Pilot-Messungen ersetzen",
+    ),
+    (
+        "low/base/high ΔT not in order",
+        "niedrig/Basis/hoch nicht in Reihenfolge: das Rauschen "
+        "der Simulation ist größer als der Abstand der Stufen; "
+        "mehr Läufe, bevor eine Spanne genannt wird",
+    ),
+    (
+        "simulated ΔT is zero",
+        "simulierter Durchsatzgewinn ist null: der Effekt bewegt den "
+        "Engpass nicht (Wert höchstens über ΔI/ΔOE)",
+    ),
+)
+
+
+def _note_de(text: str) -> str:
+    for en, de in _NOTES_DE:
+        if text.startswith(en):
+            return de
+    if ": simulated ΔT" in text and "within noise" in text:
+        lvl = text.split(":")[0]
+        return f"{lvl}: simulierter ΔT liegt im Rauschen (< 2 Standardfehler): mit 0 bewertet"
+    if text.startswith("base ΔT together"):
+        nums = [x for x in text.replace(",", "").split() if x.replace(".", "").isdigit()]
+        if len(nums) >= 2:
+            return (
+                f"gemeinsamer Basis-ΔT {float(nums[0]):,.0f} gegen Summe der Einzelwerte "
+                f"{float(nums[1]):,.0f} pro Monat: die Gewinne überlappen am selben Engpass; "
+                "der gemeinsame Wert gilt"
+            )
+    return text
+
+
 def to_markdown(r: ValueReport, econ: Economics, lang: str = "en") -> str:
     cur = econ.currency
     h = {
@@ -409,7 +452,8 @@ def to_markdown(r: ValueReport, econ: Economics, lang: str = "en") -> str:
         "",
         f"{h[10]} ({cur}): " + ", ".join(f"{k.value} {v:,.0f}" for k, v in r.portfolio.items()),
     ]
-    out += [f"- {d}" for d in r.model.dedup_notes]
+    tr = _note_de if lang == "de" else (lambda x: x)
+    out += [f"- {tr(d)}" for d in r.model.dedup_notes]
     if r.model.mirage_ledger:
         out += ["", f"**{h[9]}:**"]
         out += [
@@ -417,9 +461,15 @@ def to_markdown(r: ValueReport, econ: Economics, lang: str = "en") -> str:
             f"{m.claimed_amount:,.0f} {cur}/month → 0 ({m.reason})"
             for m in r.model.mirage_ledger
         ]
-    notes = [f"{p.opportunity_id}: {n}" for p in r.per_opportunity for n in p.notes]
+    notes = [f"{p.opportunity_id}: {tr(n)}" for p in r.per_opportunity for n in p.notes]
     if notes:
         out += ["", f"**{h[11]}:**", *[f"- {n}" for n in notes]]
     if r.model.expected_lag:
-        out += ["", f"Lag: {r.model.expected_lag}"]
+        lag = r.model.expected_lag
+        if lang == "de":
+            lag = lag.replace(
+                "leading indicators in 2–4 weeks; money in 1–3 months",
+                "Frühindikatoren nach 2–4 Wochen; Geld nach 1–3 Monaten",
+            )
+        out += ["", f"{'Verzögerung' if lang == 'de' else 'Lag'}: {lag}"]
     return "\n".join(out)

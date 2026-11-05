@@ -213,7 +213,7 @@ def run_pipeline(
             # ---- feasibility (7) -------------------------------------------------------
             s.phase = 7
             s.feasibility = [
-                assess(o, by_id(o.pattern) if o.pattern else None, domain=b.domain_id)
+                assess(o, by_id(o.pattern) if o.pattern else None, domain=b.domain_id, lang=lang)
                 for o in s.opportunities.opportunities
             ]
             if any(f.status == "blocked" for f in s.feasibility):

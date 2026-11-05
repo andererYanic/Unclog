@@ -170,6 +170,12 @@ class FlowGraph:
             return offered
         return offered / b.utilization
 
+    def drum_rate(self, resource_id: str) -> float:
+        """Items per week passing through the resource's nodes, capped by its capacity."""
+        rl = self.resource_loads()[resource_id]
+        d = self.demand()
+        return sum(d[n] for n in rl.node_ids) / max(1.0, rl.utilization)
+
     def downstream_nodes(self, node_ids: set[str]) -> set[str]:
         adj: dict[str, list[str]] = {}
         for e in self.edges:

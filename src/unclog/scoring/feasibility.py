@@ -114,11 +114,56 @@ _HEALTH = _rx("patient", "diagnos", "health record", "gesundheit", "medizin", "t
 _FINANCE = _rx("invoice", "rechnung", "booking", "buchung", "ledger", "payment", "zahlung", "datev")
 
 
+FLAGS_DE = {
+    "Health data:": "Gesundheitsdaten: besondere Kategorie (DSGVO Art. 9; zusätzlich §203 StGB). "
+    "Vor jedem Entwurf Prüfung durch Fachleute.",
+    "Employment context:": "Beschäftigtenkontext: Hochrisiko-Bereich nach EU AI Act "
+    "(Bewerbung/Leistungsbewertung); Mitbestimmung des Betriebsrats "
+    "(BetrVG §87 Abs. 1 Nr. 6). Vorher Information/Einwilligung und "
+    "rechtliche Prüfung.",
+    "Personal data:": "Personenbezogene Daten: Rechtsgrundlage nach DSGVO, "
+    "Auftragsverarbeitungsvertrag mit dem KI-Anbieter, Datenminimierung, "
+    "Löschfristen.",
+    "Marketing outreach:": "Werbliche Ansprache: Einwilligungsregeln für E-Mail und Telefon "
+    "(UWG §7); Nachrichten nur als Entwurf zur Freigabe.",
+    "Bookkeeping records:": "Buchhaltungsunterlagen: Aufbewahrung und Nachvollziehbarkeit "
+    "(GoBD); keine ungeprüften Buchungen.",
+    "External effect:": "Wirkung nach außen: nur als Entwurf/pausiert anlegen, ein Mensch gibt "
+    "vor Versand oder Veröffentlichung frei; Änderungszusammenfassung "
+    "nötig (G13).",
+    "No named client owner:": "Keine verantwortliche Person beim Kunden: niemand betreibt es "
+    "nach der Übergabe (G12, G15).",
+    "Underlying process is broken:": "Zugrunde liegender Prozess ist kaputt: erst reparieren "
+    "(§9.8).",
+    "Process health not yet assessed": "Zustand des Prozesses noch nicht geprüft (§9.8).",
+    "Review load would create": "Prüfaufwand würde einen neuen Engpass erzeugen (G8).",
+    "Review happens at the constraint:": "Prüfung findet am Engpass statt: der Nettoeffekt muss "
+    "im Pilot positiv sein.",
+    "Works after the constraint:": "Arbeitet nach dem Engpass: Fehler hier verschwenden "
+    "Engpass-Zeit; starke Prüfung nötig.",
+    "R&D:": "F&E: getrennt beauftragen; nicht als Beratungsergebnis verkaufen.",
+}
+
+
+def _german(text: str) -> str:
+    if text.startswith("Needs data from "):
+        systems = text.removeprefix("Needs data from ").split(":")[0]
+        return (
+            f"Braucht Daten aus {systems}: heute gibt es nur Datei-Uploads (Entscheidung "
+            "003); vor dem Livegang regelmäßigen Export oder Schnittstelle einplanen."
+        )
+    for prefix, de in FLAGS_DE.items():
+        if text.startswith(prefix):
+            return de
+    return text
+
+
 def assess(
     opp: Opportunity,
     pattern: Pattern | None = None,
     live_connectors: set[str] = frozenset({"file_drop"}),
     domain: str | None = None,
+    lang: str = "en",
 ) -> Feasibility:
     text = " ".join(
         x or ""
@@ -226,4 +271,6 @@ def assess(
         )
     if opp.rd_label:
         add(Flag("process", "info", "R&D: scope separately; not sold as a consulting outcome."))
+    if lang == "de":
+        f.flags = [Flag(x.area, x.severity, _german(x.text)) for x in f.flags]
     return f

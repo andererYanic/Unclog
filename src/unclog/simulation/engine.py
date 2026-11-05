@@ -30,7 +30,7 @@ from ..flow.graph import FlowGraph
 from ..flow.units import hours_per_week
 from .sampling import interarrival_hours, service_hours
 
-ARRIVE, DONE, BATCH_SETUP_DONE = 0, 1, 2
+ARRIVE, DONE, BATCH_SETUP_DONE, RENEGE = 0, 1, 2, 3
 
 
 @dataclass
@@ -59,6 +59,7 @@ class RepResult:
     max_queue_by_node: dict[str, int]
     completed: int
     lost: int
+    reneged: int  # left a queue because they waited longer than the node's patience
     gate_backlog_end: int
     gate_wait_h: list[float]
 
@@ -172,6 +173,8 @@ class Simulator:
         lead: list[float] = []
         internal: list[float] = []  # from release (gate entry, else arrival) to completion
         completed = lost = 0
+        waiting: set[tuple[int, str]] = set()  # (entity, node) in a queue with patience
+        reneged = [0]
 
         def account(t):
             dt = t - last[0]
@@ -247,6 +250,9 @@ class Simulator:
                     pool.queue.append((e, node_id))
                     in_queue[node_id] += 1
                     max_q[node_id] = max(max_q[node_id], in_queue[node_id])
+                    if node.patience_h:
+                        waiting.add((e, node_id))
+                        push(t + node.patience_h, RENEGE, (e, node_id))
 
         def route(eid, node_id, t):
             nxt = self._next(node_id)
@@ -282,9 +288,20 @@ class Simulator:
                     pool.busy -= 1
                     if pool.queue:
                         e2, n2 = pool.queue.popleft()
+                        waiting.discard((e2, n2))
                         in_queue[n2] -= 1
                         start_service(e2, n2, t)
                 route(eid, node_id, t)
+            elif kind == RENEGE:
+                eid, node_id = payload
+                if (eid, node_id) in waiting:  # still waiting: the customer gives up
+                    waiting.discard((eid, node_id))
+                    self.pool_of[node_id].queue.remove((eid, node_id))
+                    in_queue[node_id] -= 1
+                    in_node[node_id] -= 1
+                    if t >= W:
+                        reneged[0] += 1
+                    leave_system(eid, t, done=False)
 
         account(T)
         span = max(T - W, 1e-9)
@@ -303,6 +320,7 @@ class Simulator:
             max_queue_by_node=max_q,
             completed=completed,
             lost=lost,
+            reneged=reneged[0],
             gate_backlog_end=len(gate_backlog),
             gate_wait_h=gate_waits,
         )

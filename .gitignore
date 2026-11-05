@@ -13,3 +13,6 @@ dist/
 build/
 *.egg-info/
 .unclog-cache/
+
+# rehearsal scratch client store
+evals/rehearsal/*/work/

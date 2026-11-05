@@ -121,8 +121,24 @@ def cmd_flow_from_log(args: argparse.Namespace) -> int:
         from .orchestrator.assemble import save_fragment
 
         activity = {e.activity: f"log-{_slug(e.activity)}" for e in src.event_logs[0].events}
+        from collections import defaultdict
+
+        times: dict[str, list] = defaultdict(list)
+        for e in src.event_logs[0].events:
+            times[e.activity].append(e.timestamp)
+        rates = {}  # per step: events per week over the period the step actually occurred
+        for a, ts in times.items():
+            weeks = max((max(ts) - min(ts)).total_seconds() / (7 * 86400), 1.0)
+            rates[f"log-{_slug(a)}"] = (len(ts) - 1) / weeks if len(ts) > 1 else 0.0
         path = save_fragment(
-            store, f"log-{src.source.id}", nodes, edges, args.domain, src.source.id, activity
+            store,
+            f"log-{src.source.id}",
+            nodes,
+            edges,
+            args.domain,
+            src.source.id,
+            activity,
+            measured_rates=rates,
         )
         print(f"saved flow fragment: {path}")
     p = {(e.source, e.target): e.probability for e in edges}

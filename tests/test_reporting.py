@@ -65,7 +65,7 @@ def tree_for(rep, c, g, lang="en"):
 def test_dbr_by_constraint_type():
     c, g, heat, rep = diag("backend_fulfillment_flood")
     d = design_dbr(rep.binding, g)
-    assert d.drum == "workshop" and d.buffer.size_h == 168 and "≤ 19" in d.rope
+    assert d.drum == "4 carpenters" and d.buffer.size_h == 168 and "≤ 19" in d.rope
     _, _, _, rep2 = diag("hidden_policy_approval")
     assert "rule" in design_dbr(rep2.binding, None).notes[0]
     _, _, _, rep3 = diag("market_after_elevation")
@@ -212,10 +212,10 @@ def test_full_package_en(tmp_path):
         "export.json",
     } <= names
     summary = (tmp_path / "01-executive-summary.md").read_text()
-    assert "workshop cannot keep up" in summary and "Raise throughput" in summary
+    assert "4 carpenters cannot keep up" in summary and "Raise throughput" in summary
     assert "- [ ] Pick runner platform (012)" in summary and "Monthly profit effect" in summary
     road = (tmp_path / "04-roadmap-dbr.md").read_text()
-    assert "**Drum:** workshop" in road and "Wave 3 — elevate" in road
+    assert "**Drum:** 4 carpenters" in road and "Wave 3 — elevate" in road
     assert "```mermaid" in (tmp_path / "03-goal-tree.md").read_text()
     wb = load_workbook(tmp_path / "07-value-workbook.xlsx")
     assert wb.sheetnames == ["value lines", "mirage ledger", "assumptions"]

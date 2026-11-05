@@ -50,6 +50,7 @@ def save_fragment(
     activity_nodes: dict[str, str] | None = None,
     resources: list[Resource] = (),
     actor: str = "flow_modeler",
+    measured_rates: dict[str, float] | None = None,
 ) -> Path:
     path = flow_dir(store) / f"{name}.json"
     path.write_text(
@@ -61,6 +62,7 @@ def save_fragment(
                 "nodes": [n.model_dump(mode="json", exclude_none=True) for n in nodes],
                 "edges": [e.model_dump(mode="json") for e in edges],
                 "resources": [r.model_dump(mode="json") for r in resources],
+                "measured_rates": measured_rates or {},
             },
             indent=2,
             ensure_ascii=False,
@@ -68,6 +70,34 @@ def save_fragment(
     )
     store._audit("flow_fragment_saved", actor, fragment=name, nodes=len(nodes))
     return path
+
+
+def calibration_gaps(case: SyntheticCase, rates: dict[str, float]) -> list[str]:
+    """A step with a persistent queue runs at its capacity, so its measured completions per week
+    reveal the real capacity. Warn when the model assumes clearly more."""
+    if not rates or not case.nodes:
+        return []
+    g = case.graph()
+    loads = g.resource_loads()
+    gaps = []
+    for n in g.nodes:
+        rate = rates.get(n.id)
+        if rate is None or not n.resource_ids or not (n.queue_length or 0) > 0:
+            continue
+        cap = min(loads[r].capacity_h for r in n.resource_ids)
+        from ..flow.distributions import service_hours
+
+        svc = service_hours(n.service) if n.service else None
+        if not svc:
+            continue
+        modeled = cap / svc
+        if modeled > rate * 1.1:
+            gaps.append(
+                f"capacity at '{n.name}' looks overestimated: the model allows "
+                f"{modeled:.1f}/week, the data shows {rate:.1f}/week while work queues; "
+                "calibrate hours or service time"
+            )
+    return gaps
 
 
 def _merge(fragments: list[dict]) -> tuple[list[dict], list[dict], list[dict], dict, dict]:
@@ -181,6 +211,8 @@ def assemble(
     if case.nodes:
         try:
             case.graph()
+            rates = {k: v for f in fragments for k, v in f.get("measured_rates", {}).items()}
+            gaps += calibration_gaps(case, rates)
         except FlowGraphError as exc:
             gaps.append(f"flow model is invalid: {exc}")
     out = Path(store.root) / "case"

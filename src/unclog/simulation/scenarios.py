@@ -73,6 +73,7 @@ class SimResult:
     constraint_location: str | None
     gate_backlog_end: Band
     gate_wait_p50_h: Band
+    reneged_per_week: Band | None = None
 
     def to_simrun(self, run_id: str, inputs_ref: str) -> SimRun:
         return SimRun(
@@ -134,6 +135,7 @@ def simulate(
         constraint_location=max(set(locs), key=locs.count) if locs else None,
         gate_backlog_end=Band.of([float(r.gate_backlog_end) for r in reps]),
         gate_wait_p50_h=Band.of([percentile(r.gate_wait_h, 0.5) for r in reps]),
+        reneged_per_week=Band.of([r.reneged / ((horizon_weeks - warmup_weeks) or 1) for r in reps]),
     )
 
 
@@ -163,7 +165,7 @@ def standard_scenarios(
         )
     out.append(Scenario(f"demand +{demand_factor - 1:.0%} (no rope)", arrival_scale=demand_factor))
     if gate_node:
-        limit = rope_limit(graph, buffer_weeks)
+        limit = rope_limit(graph, buffer_weeks, constraint_resource)
         out.append(
             Scenario(
                 f"demand +{demand_factor - 1:.0%} with rope at {gate_node} (WIP≤{limit})",
@@ -174,9 +176,12 @@ def standard_scenarios(
     return out
 
 
-def rope_limit(graph: FlowGraph, buffer_weeks: float = 1.0) -> int:
-    """WIP limit = drum (constraint-limited throughput per week) x time buffer in weeks."""
-    return max(1, round(graph.effective_throughput() * buffer_weeks))
+def rope_limit(graph: FlowGraph, buffer_weeks: float = 1.0, resource_id: str | None = None) -> int:
+    """WIP limit = drum rate x time buffer (Little's law). With the constraint resource known,
+    the drum rate is the items/week through its own steps (not finished units at the end of
+    the flow, which can be fewer after drop-offs)."""
+    rate = graph.drum_rate(resource_id) if resource_id else graph.effective_throughput()
+    return max(1, round(rate * buffer_weeks))
 
 
 def compare(graph: FlowGraph, scenarios: list[Scenario], **kw) -> list[SimResult]:

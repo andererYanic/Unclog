@@ -163,6 +163,7 @@ def assemble(
     policies: list[Policy],
     process_health: dict[str, ProcessHealth],
     library: tuple[Pattern, ...] | None = None,
+    lang: str = "en",
 ) -> OpportunityAnalysis:
     by_seed = {s.node.id: s for s in seeds}
     problems: list[str] = []
@@ -207,7 +208,14 @@ def assemble(
     evidence: list[Evidence] = list(constraint.evidence)
     analysis = OpportunityAnalysis([], [], [], list(out.open_questions))
     if proc_note:
-        analysis.open_questions.append(proc_note)
+        from ..i18n import domain_label
+
+        analysis.open_questions.append(
+            f"Zustand des Prozesses in {domain_label(constraint.domain_id, 'de')} noch nicht "
+            "geprüft: vor dem Bauen bestätigen, dass der Ablauf funktioniert (§9.8)"
+            if lang == "de"
+            else proc_note
+        )
     extra_review: dict[str, float] = {}
 
     for j in out.judgements:
@@ -373,7 +381,9 @@ def analyse_opportunities(
         prompt,
         "\n".join(lines),
         AnalystOutput,
-        lambda o: assemble(o, ss, constraint, graph, list(policies), process_health or {}, lib),
+        lambda o: assemble(
+            o, ss, constraint, graph, list(policies), process_health or {}, lib, lang
+        ),
     )
 
 

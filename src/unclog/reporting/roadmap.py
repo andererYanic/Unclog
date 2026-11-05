@@ -79,7 +79,7 @@ def design_dbr(
 ) -> DBRDesign:
     de = lang == "de"
     if c.type is ConstraintType.physical and c.resource_id:
-        limit = rope_limit(graph, buffer_weeks) if graph is not None else None
+        limit = rope_limit(graph, buffer_weeks, c.resource_id) if graph is not None else None
         buf = Buffer(id=f"buffer-{c.resource_id}", protects=c.id, size_h=168.0 * buffer_weeks)
         rope = (
             (
@@ -92,8 +92,13 @@ def design_dbr(
             if limit
             else ("Freigabe im Takt des Engpasses" if de else "Release at the constraint's pace")
         )
+        name = (
+            next((r.name for r in graph.resources if r.id == c.resource_id), c.resource_id)
+            if graph is not None
+            else c.resource_id
+        )
         return DBRDesign(
-            drum=f"{c.resource_id}",
+            drum=name,
             buffer=buf,
             rope=rope,
             notes=(
@@ -254,7 +259,7 @@ def _kpis(c: Constraint, graph, report, metrics, de: bool) -> list[KPI]:
             KPI(
                 "Durchsatz am Engpass" if de else "constraint throughput",
                 round(graph.effective_throughput(), 2),
-                "units/week",
+                "Einheiten/Woche" if de else "units/week",
                 True,
                 "flow model",
             )
@@ -265,7 +270,7 @@ def _kpis(c: Constraint, graph, report, metrics, de: bool) -> list[KPI]:
                 KPI(
                     f"Auslastung {c.resource_id}" if de else f"{c.resource_id} load",
                     round(u, 2),
-                    "ratio",
+                    "Verhältnis" if de else "ratio",
                     True,
                     "flow model",
                 )
@@ -277,7 +282,7 @@ def _kpis(c: Constraint, graph, report, metrics, de: bool) -> list[KPI]:
         KPI(
             "Durchlaufzeit Auftrag bis Geld" if de else "lead time order to cash",
             None,
-            "days",
+            "Tage" if de else "days",
             True,
             "to instrument",
         )

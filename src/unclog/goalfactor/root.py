@@ -183,6 +183,8 @@ def root_goal(
     )
     t = constraint.type
     who = _target_label(constraint)
+    if constraint.resource_id and graph is not None:  # people read names, not ids
+        who = next((r.name for r in graph.resources if r.id == constraint.resource_id), who)
     if t is ConstraintType.physical and graph is not None:
         a = graph.effective_throughput()
         b = (

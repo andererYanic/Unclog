@@ -1,0 +1,117 @@
+{
+  "resources": [
+    {
+      "id": "inhaber",
+      "name": "Thomas Berger (Inhaber)",
+      "kind": "person",
+      "count": 1,
+      "hours_per_period": 18,
+      "assumption": true,
+      "confidence": 0.6
+    },
+    {
+      "id": "buero",
+      "name": "Büro",
+      "kind": "person",
+      "count": 1,
+      "hours_per_period": 30,
+      "assumption": true,
+      "confidence": 0.6
+    },
+    {
+      "id": "werkstatt",
+      "name": "6 Schreiner",
+      "kind": "team",
+      "count": 6,
+      "hours_per_period": 38,
+      "assumption": true,
+      "confidence": 0.7
+    },
+    {
+      "id": "montage",
+      "name": "2 Monteure",
+      "kind": "team",
+      "count": 2,
+      "hours_per_period": 38,
+      "assumption": true,
+      "confidence": 0.7
+    }
+  ],
+  "nodes": [
+    {
+      "id": "log-anfrage",
+      "name": "Anfrage",
+      "domain_id": "RACE-A"
+    },
+    {
+      "id": "log-aufmass",
+      "name": "Aufmaß",
+      "domain_id": "RACE-C",
+      "resource_ids": [
+        "inhaber"
+      ],
+      "patience_h": 504,
+      "service": {
+        "kind": "lognormal",
+        "params": {
+          "mean": 2.8,
+          "cv": 0.3
+        },
+        "unit": "hour"
+      }
+    },
+    {
+      "id": "log-angebot-versendet",
+      "name": "Angebot",
+      "domain_id": "RACE-C",
+      "resource_ids": [
+        "buero"
+      ],
+      "service": {
+        "kind": "lognormal",
+        "params": {
+          "mean": 1.5,
+          "cv": 0.4
+        },
+        "unit": "hour"
+      }
+    },
+    {
+      "id": "log-auftrag",
+      "name": "Auftrag",
+      "domain_id": "RACE-C"
+    },
+    {
+      "id": "log-produktion-start",
+      "name": "Produktion",
+      "domain_id": "fulfillment",
+      "resource_ids": [
+        "werkstatt"
+      ],
+      "service": {
+        "kind": "lognormal",
+        "params": {
+          "mean": 40,
+          "cv": 0.3
+        },
+        "unit": "hour"
+      }
+    },
+    {
+      "id": "log-montage-fertig",
+      "name": "Montage",
+      "domain_id": "fulfillment",
+      "resource_ids": [
+        "montage"
+      ],
+      "service": {
+        "kind": "lognormal",
+        "params": {
+          "mean": 12,
+          "cv": 0.3
+        },
+        "unit": "hour"
+      }
+    }
+  ]
+}

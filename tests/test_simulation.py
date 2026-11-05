@@ -173,3 +173,18 @@ def test_cli_simulate(capsys):
     )
     out = capsys.readouterr().out
     assert "elevate: +25% workshop" in out and "rope at design" in out
+
+
+def test_patience_turns_queues_into_lost_customers():
+    """With patience, an overloaded step loses customers; relieving it wins them back."""
+    g = mm1(lam_per_h=1.2, svc_h=1.0)  # 120% load
+    node = g.node("s").model_copy(update={"patience_h": 6.0})
+    patient = FlowGraph([g.nodes[0], node], g.edges, g.resources)
+    kw = dict(replications=3, horizon_weeks=6, warmup_weeks=1)
+    base = simulate(patient, **kw)
+    assert base.reneged_per_week.mean > 10  # customers give up instead of queueing forever
+    relieved = simulate(patient, Scenario("+50%", capacity={"r": 1.5}), **kw)
+    assert relieved.throughput.mean > base.throughput.mean * 1.15
+    assert relieved.reneged_per_week.mean < base.reneged_per_week.mean / 3
+    no_patience = simulate(g, **kw)
+    assert no_patience.reneged_per_week.mean == 0

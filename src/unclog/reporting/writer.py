@@ -78,6 +78,7 @@ L10N = {
         "no": "no",
         "triggers": "Re-baseline triggers",
         "target": "Target of the plan",
+        "value_sum": "sum of lines; joint ΔT base",
         "risk_title": "Risk & governance register",
         "plain": {
             ConstraintType.physical: "{who} cannot keep up: every hour there is an hour for "
@@ -131,6 +132,7 @@ L10N = {
         "no": "nein",
         "triggers": "Auslöser für Neubewertung",
         "target": "Ziel der Maßnahmen",
+        "value_sum": "Summe der Zeilen; gemeinsames ΔT Basis",
         "risk_title": "Risiko- und Governance-Register",
         "plain": {
             ConstraintType.physical: "{who} kommt nicht hinterher: jede Stunde dort ist eine "
@@ -183,7 +185,10 @@ def _plain(b: Bundle, L: dict) -> str:
         if c.type is ConstraintType.policy
         else c.description
     )
-    return L["plain"][c.type].format(who=c.resource_id or c.domain_id, what=what, where=c.domain_id)
+    who = c.resource_id or c.domain_id
+    if c.resource_id and b.graph is not None:
+        who = next((r.name for r in b.graph.resources if r.id == c.resource_id), who)
+    return L["plain"][c.type].format(who=who, what=what, where=domain_label(c.domain_id, b.lang))
 
 
 def _risks(b: Bundle) -> list[Risk]:
@@ -219,7 +224,7 @@ def write(b: Bundle, out_dir: str | Path) -> list[Path]:
         cur = b.economics.currency
         value_range = (
             f"{tot[ValueScenario.low]:,.0f} – {tot[ValueScenario.high]:,.0f} {cur} "
-            f"(sum of lines; joint ΔT base "
+            f"({L['value_sum']} "
             f"{b.value.portfolio[ValueScenario.base]:,.0f} {cur})"
         )
     risks = [f"{r.description} (L{r.likelihood}×I{r.impact})" for r in _risks(b)]

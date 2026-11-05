@@ -1,0 +1,1199 @@
+{
+  "title": "Schreinerei Holzwerk Berger GmbH",
+  "lang": "de",
+  "domains": [
+    {
+      "id": "domain-RACE-R",
+      "name": "RACE-R",
+      "prior": 0.15,
+      "metrics": [],
+      "verdict": "not_assessed",
+      "evidence_ids": [],
+      "rationale": "Noch keine Kennzahlen oder Ablaufdaten"
+    },
+    {
+      "id": "domain-RACE-A",
+      "name": "RACE-A",
+      "prior": 0.15,
+      "metrics": [
+        {
+          "id": "src-a630a66dbe217aeb-metric-1",
+          "domain_id": "RACE-A",
+          "name": "Anfragen",
+          "value": 55.0,
+          "unit": "pro Monat",
+          "period": "Monat",
+          "benchmark": null,
+          "benchmark_source_id": null,
+          "higher_is_better": null,
+          "source_id": "src-a630a66dbe217aeb",
+          "measured": false
+        }
+      ],
+      "verdict": "clear",
+      "evidence_ids": [
+        "src-92c35f5e42099358",
+        "src-a630a66dbe217aeb"
+      ],
+      "rationale": "Kein Signal über den Schwellen"
+    },
+    {
+      "id": "domain-RACE-C",
+      "name": "RACE-C",
+      "prior": 0.15,
+      "metrics": [
+        {
+          "id": "src-a630a66dbe217aeb-metric-2",
+          "domain_id": "RACE-C",
+          "name": "Kunden wartend auf Aufmaß",
+          "value": 20.0,
+          "unit": "Kunden",
+          "period": "aktuell",
+          "benchmark": null,
+          "benchmark_source_id": null,
+          "higher_is_better": null,
+          "source_id": "src-a630a66dbe217aeb",
+          "measured": false
+        },
+        {
+          "id": "src-a630a66dbe217aeb-metric-3",
+          "domain_id": "RACE-C",
+          "name": "Angebot -> Auftrag",
+          "value": 0.5,
+          "unit": "ratio",
+          "period": "laufend",
+          "benchmark": null,
+          "benchmark_source_id": null,
+          "higher_is_better": null,
+          "source_id": "src-a630a66dbe217aeb",
+          "measured": false
+        }
+      ],
+      "verdict": "candidate",
+      "evidence_ids": [
+        "src-92c35f5e42099358",
+        "src-a630a66dbe217aeb"
+      ],
+      "rationale": "inhaber zu 140% ausgelastet (25 von 18 h/Woche); Aufmaß: 46 in der Warteschlange, ~315 h Wartezeit; Angebot: ~74 h Wartezeit; Auftrag: ~162 h Wartezeit; Median 315 h Wartezeit vor 'aufmass' (p90 615 h, 76 Fälle, Ereignisprotokoll); Rückstand wächst: 13.0 Fälle/Woche rein gegen 2.2 raus; 122 offen gegen ~11 erwartet (Ereignisprotokoll; Randeffekte des Exports prüfen)"
+    },
+    {
+      "id": "domain-RACE-E",
+      "name": "RACE-E",
+      "prior": 0.15,
+      "metrics": [],
+      "verdict": "not_assessed",
+      "evidence_ids": [],
+      "rationale": "Noch keine Kennzahlen oder Ablaufdaten"
+    },
+    {
+      "id": "domain-fulfillment",
+      "name": "fulfillment",
+      "prior": 0.04,
+      "metrics": [],
+      "verdict": "candidate",
+      "evidence_ids": [
+        "src-92c35f5e42099358"
+      ],
+      "rationale": "Produktion: ~130 h Wartezeit; Montage: ~208 h Wartezeit"
+    },
+    {
+      "id": "domain-ops",
+      "name": "ops",
+      "prior": 0.04,
+      "metrics": [],
+      "verdict": "not_assessed",
+      "evidence_ids": [],
+      "rationale": "Noch keine Kennzahlen oder Ablaufdaten"
+    },
+    {
+      "id": "domain-support",
+      "name": "support",
+      "prior": 0.04,
+      "metrics": [],
+      "verdict": "not_assessed",
+      "evidence_ids": [],
+      "rationale": "Noch keine Kennzahlen oder Ablaufdaten"
+    },
+    {
+      "id": "domain-finance",
+      "name": "finance",
+      "prior": 0.04,
+      "metrics": [],
+      "verdict": "not_assessed",
+      "evidence_ids": [],
+      "rationale": "Noch keine Kennzahlen oder Ablaufdaten"
+    },
+    {
+      "id": "domain-hr",
+      "name": "hr",
+      "prior": 0.04,
+      "metrics": [],
+      "verdict": "not_assessed",
+      "evidence_ids": [],
+      "rationale": "Noch keine Kennzahlen oder Ablaufdaten"
+    },
+    {
+      "id": "domain-procurement",
+      "name": "procurement",
+      "prior": 0.04,
+      "metrics": [],
+      "verdict": "not_assessed",
+      "evidence_ids": [],
+      "rationale": "Noch keine Kennzahlen oder Ablaufdaten"
+    },
+    {
+      "id": "domain-product",
+      "name": "product",
+      "prior": 0.04,
+      "metrics": [],
+      "verdict": "not_assessed",
+      "evidence_ids": [],
+      "rationale": "Noch keine Kennzahlen oder Ablaufdaten"
+    },
+    {
+      "id": "domain-it",
+      "name": "it",
+      "prior": 0.04,
+      "metrics": [],
+      "verdict": "not_assessed",
+      "evidence_ids": [],
+      "rationale": "Noch keine Kennzahlen oder Ablaufdaten"
+    },
+    {
+      "id": "domain-legal",
+      "name": "legal",
+      "prior": 0.04,
+      "metrics": [],
+      "verdict": "not_assessed",
+      "evidence_ids": [],
+      "rationale": "Noch keine Kennzahlen oder Ablaufdaten"
+    },
+    {
+      "id": "domain-mgmt",
+      "name": "mgmt",
+      "prior": 0.04,
+      "metrics": [],
+      "verdict": "not_assessed",
+      "evidence_ids": [],
+      "rationale": "Noch keine Kennzahlen oder Ablaufdaten"
+    },
+    {
+      "id": "domain-other",
+      "name": "other",
+      "prior": 0.02,
+      "metrics": [],
+      "verdict": "not_assessed",
+      "evidence_ids": [],
+      "rationale": "Noch keine Kennzahlen oder Ablaufdaten"
+    }
+  ],
+  "direction": {
+    "verdict": "capacity_limited",
+    "note": "inhaber (Front-End (RACE), RACE-C) ist zu 140% ausgelastet."
+  },
+  "binding_constraint": {
+    "evidence": [
+      {
+        "id": "ev-cap-4bcfdd9d18",
+        "source_id": "derived-flow-model",
+        "type": "load_capacity_calc",
+        "locator": null,
+        "quote": null,
+        "note": "inhaber zu 140% ausgelastet (25 von 18 h/Woche)"
+      },
+      {
+        "id": "ev-q-20127b361e",
+        "source_id": "src-92c35f5e42099358",
+        "type": "queue_observation",
+        "locator": null,
+        "quote": null,
+        "note": "Aufmaß: 46 in der Warteschlange, ~315 h Wartezeit"
+      },
+      {
+        "id": "ev-q-2831e7b8a8",
+        "source_id": "src-92c35f5e42099358",
+        "type": "queue_observation",
+        "locator": null,
+        "quote": null,
+        "note": "Angebot: ~74 h Wartezeit"
+      },
+      {
+        "id": "ev-q-99c997fe88",
+        "source_id": "src-92c35f5e42099358",
+        "type": "queue_observation",
+        "locator": null,
+        "quote": null,
+        "note": "Auftrag: ~162 h Wartezeit"
+      },
+      {
+        "id": "ev-q-563d698364",
+        "source_id": "src-92c35f5e42099358",
+        "type": "log_data",
+        "locator": "activity aufmass",
+        "quote": null,
+        "note": "Median 315 h Wartezeit vor 'aufmass' (p90 615 h, 76 Fälle, Ereignisprotokoll)"
+      },
+      {
+        "id": "ev-cap-d97b3fe31d",
+        "source_id": "src-92c35f5e42099358",
+        "type": "log_data",
+        "locator": null,
+        "quote": null,
+        "note": "Rückstand wächst: 13.0 Fälle/Woche rein gegen 2.2 raus; 122 offen gegen ~11 erwartet (Ereignisprotokoll; Randeffekte des Exports prüfen)"
+      },
+      {
+        "id": "ev-relief-9990f254b6",
+        "source_id": "derived-flow-model",
+        "type": "load_capacity_calc",
+        "locator": null,
+        "quote": null,
+        "note": "+10% Kapazität bei inhaber: Durchsatz 2.88 -> 3.16 Einheiten/Woche"
+      },
+      {
+        "id": "ev-starve-2133f65da1",
+        "source_id": "derived-flow-model",
+        "type": "load_capacity_calc",
+        "locator": null,
+        "quote": null,
+        "note": "nach inhaber (140%): buero 32%, montage 45%, werkstatt 50% -> Kapazität wartet/leer"
+      },
+      {
+        "id": "ev-queue-14c4870fa9",
+        "source_id": "src-92c35f5e42099358",
+        "type": "queue_observation",
+        "locator": "node log-aufmass",
+        "quote": null,
+        "note": "Aufmaß: 46 in der Warteschlange, ~315 h Wartezeit"
+      },
+      {
+        "id": "ev-queue-b2b04522b2",
+        "source_id": "src-92c35f5e42099358",
+        "type": "log_data",
+        "locator": "activity aufmass",
+        "quote": null,
+        "note": "Ereignisprotokoll: Median 315 h Wartezeit vor 'aufmass' (p90 615 h, n=76)"
+      },
+      {
+        "id": "ev-expedite-8e2c085c4c",
+        "source_id": "src-a630a66dbe217aeb",
+        "type": "expedite_signal",
+        "locator": "t=00:04:20.000",
+        "quote": "Berger: Das Aufmaß mache ich selbst, immer freitags und samstags",
+        "note": null
+      },
+      {
+        "id": "ev-absence-73e024416c",
+        "source_id": "src-a630a66dbe217aeb",
+        "type": "absence_test",
+        "locator": "t=00:08:30.000",
+        "quote": "Berger: Wenn ich im Urlaub bin, passiert beim Aufmaß gar nichts, dann stapeln sich die Anfragen.",
+        "note": null
+      }
+    ],
+    "assumption": false,
+    "confidence": 0.95,
+    "id": "con-RACE-C-inhaber",
+    "type": "physical",
+    "domain_id": "RACE-C",
+    "resource_id": "inhaber",
+    "policy_id": null,
+    "market_segment": null,
+    "description": "Thomas Berger (Inhaber) (inhaber) zu 140% ausgelastet in RACE-C (Abschluss)",
+    "load_capacity_ratio": null,
+    "queue_evidence": "Aufmaß: 46 in der Warteschlange, ~315 h Wartezeit; Ereignisprotokoll: Median 315 h Wartezeit vor 'aufmass' (p90 615 h, n=76)",
+    "status": "confirmed",
+    "tests_run": [
+      {
+        "kind": "relief",
+        "passed": true,
+        "evidence_ids": [
+          "ev-relief-9990f254b6"
+        ],
+        "note": "+10% Kapazität bei inhaber: Durchsatz 2.88 -> 3.16 Einheiten/Woche"
+      },
+      {
+        "kind": "starvation",
+        "passed": true,
+        "evidence_ids": [
+          "ev-starve-2133f65da1"
+        ],
+        "note": "nach inhaber (140%): buero 32%, montage 45%, werkstatt 50% -> Kapazität wartet/leer"
+      },
+      {
+        "kind": "queue",
+        "passed": true,
+        "evidence_ids": [
+          "ev-queue-14c4870fa9",
+          "ev-queue-b2b04522b2"
+        ],
+        "note": "Aufmaß: 46 in der Warteschlange, ~315 h Wartezeit; Ereignisprotokoll: Median 315 h Wartezeit vor 'aufmass' (p90 615 h, n=76)"
+      },
+      {
+        "kind": "expedite",
+        "passed": true,
+        "evidence_ids": [
+          "ev-expedite-8e2c085c4c"
+        ],
+        "note": "1 Aussage(n), z. B. \"Berger: Das Aufmaß mache ich selbst, immer freitags und samstags\""
+      },
+      {
+        "kind": "absence",
+        "passed": true,
+        "evidence_ids": [
+          "ev-absence-73e024416c"
+        ],
+        "note": "1 Aussage(n), z. B. \"Berger: Wenn ich im Urlaub bin, passiert beim Aufmaß gar nichts, dann stapeln sich die Anfragen.\""
+      }
+    ],
+    "demand_vs_capacity_checked": true
+  },
+  "candidates": [
+    {
+      "evidence": [
+        {
+          "id": "ev-cap-4bcfdd9d18",
+          "source_id": "derived-flow-model",
+          "type": "load_capacity_calc",
+          "locator": null,
+          "quote": null,
+          "note": "inhaber zu 140% ausgelastet (25 von 18 h/Woche)"
+        },
+        {
+          "id": "ev-q-20127b361e",
+          "source_id": "src-92c35f5e42099358",
+          "type": "queue_observation",
+          "locator": null,
+          "quote": null,
+          "note": "Aufmaß: 46 in der Warteschlange, ~315 h Wartezeit"
+        },
+        {
+          "id": "ev-q-2831e7b8a8",
+          "source_id": "src-92c35f5e42099358",
+          "type": "queue_observation",
+          "locator": null,
+          "quote": null,
+          "note": "Angebot: ~74 h Wartezeit"
+        },
+        {
+          "id": "ev-q-99c997fe88",
+          "source_id": "src-92c35f5e42099358",
+          "type": "queue_observation",
+          "locator": null,
+          "quote": null,
+          "note": "Auftrag: ~162 h Wartezeit"
+        },
+        {
+          "id": "ev-q-563d698364",
+          "source_id": "src-92c35f5e42099358",
+          "type": "log_data",
+          "locator": "activity aufmass",
+          "quote": null,
+          "note": "Median 315 h Wartezeit vor 'aufmass' (p90 615 h, 76 Fälle, Ereignisprotokoll)"
+        },
+        {
+          "id": "ev-cap-d97b3fe31d",
+          "source_id": "src-92c35f5e42099358",
+          "type": "log_data",
+          "locator": null,
+          "quote": null,
+          "note": "Rückstand wächst: 13.0 Fälle/Woche rein gegen 2.2 raus; 122 offen gegen ~11 erwartet (Ereignisprotokoll; Randeffekte des Exports prüfen)"
+        },
+        {
+          "id": "ev-2cc3e26e88-0",
+          "source_id": "src-5b405e837680027c",
+          "type": "document",
+          "locator": "para 3",
+          "quote": "Angebote werden gesammelt montags verschickt.",
+          "note": null
+        }
+      ],
+      "assumption": false,
+      "confidence": 0.45,
+      "id": "con-RACE-C-pol-f46364b94e",
+      "type": "policy",
+      "domain_id": "RACE-C",
+      "resource_id": null,
+      "policy_id": "pol-f46364b94e",
+      "market_segment": null,
+      "description": "Regel: Angebote werden gesammelt montags verschickt.",
+      "load_capacity_ratio": null,
+      "queue_evidence": null,
+      "status": "candidate",
+      "tests_run": [
+        {
+          "kind": "queue",
+          "passed": false,
+          "evidence_ids": [],
+          "note": "keine Warteschlange oder lange Wartezeit vor dem Kandidaten"
+        }
+      ],
+      "demand_vs_capacity_checked": true
+    }
+  ],
+  "discovery_actions": [
+    "Belegte Kennzahl für RACE-R (Reichweite) beschaffen: Besucher/Impressionen pro Woche, Werbebudget, Anzahl Werbemittel",
+    "Belegte Kennzahl für RACE-E (Bestandskunden) beschaffen: Kündigungen, Wiederkauf-/Upsell-Quote, Kundenwert",
+    "Belegte Kennzahl für Betrieb/Produktion beschaffen: Auslastung und Warteschlangen je Team/Maschine",
+    "Belegte Kennzahl für Kundenservice beschaffen: Ticket-Rückstand, Zeit bis Erstantwort und Lösung",
+    "Belegte Kennzahl für Finanzen beschaffen: Zeit bis Rechnung, Zahlungsziel (DSO), Monatsabschluss, Freigabe-Wartezeit",
+    "Belegte Kennzahl für Personal beschaffen: Zeit bis Einstellung, offene Schlüsselstellen, Einarbeitungszeit",
+    "Belegte Kennzahl für Einkauf beschaffen: Fehlbestände, Schwankung der Lieferzeiten",
+    "Belegte Kennzahl für Produkt/Entwicklung beschaffen: Release-Warteschlange, Wartezeit auf Review/Test",
+    "Belegte Kennzahl für IT/Daten beschaffen: Stunden manueller Datenübertragung, Schnittstellenfehler, Berichtsverzug",
+    "Belegte Kennzahl für Recht/Compliance beschaffen: Länge und Wartezeit der Prüf-Warteschlange",
+    "Belegte Kennzahl für Führung/Entscheidungen beschaffen: Entscheidungen, die auf Inhaber/Schlüsselperson warten, Freigabe-Wartezeit"
+  ],
+  "policies": [
+    {
+      "evidence": [
+        {
+          "id": "ev-2cc3e26e88-0",
+          "source_id": "src-5b405e837680027c",
+          "type": "document",
+          "locator": "para 3",
+          "quote": "Angebote werden gesammelt montags verschickt.",
+          "note": null
+        }
+      ],
+      "assumption": false,
+      "confidence": null,
+      "id": "pol-f46364b94e",
+      "kind": "batch_rule",
+      "statement": "Angebote werden gesammelt montags verschickt.",
+      "rewards_behavior": null,
+      "raises_system_t": null,
+      "local_optimum": false,
+      "inherited_from_constraint_id": null,
+      "recommendation": "Fragen, warum es sie gibt und was ohne sie passiert; Abschaffen oder Verkleinern testen, bevor darum herum automatisiert wird.",
+      "domain_id": "RACE-C",
+      "affects_node_ids": []
+    },
+    {
+      "evidence": [
+        {
+          "id": "ev-9e286be194-1",
+          "source_id": "src-a630a66dbe217aeb",
+          "type": "interview_claim",
+          "locator": "t=00:04:20.000",
+          "quote": "Berger: Das Aufmaß mache ich selbst, immer freitags und samstags.",
+          "note": null
+        }
+      ],
+      "assumption": false,
+      "confidence": null,
+      "id": "pol-532f749555",
+      "kind": "batch_rule",
+      "statement": "Berger: Das Aufmaß mache ich selbst, immer freitags und samstags.",
+      "rewards_behavior": null,
+      "raises_system_t": null,
+      "local_optimum": false,
+      "inherited_from_constraint_id": null,
+      "recommendation": "Fragen, warum es sie gibt und was ohne sie passiert; Abschaffen oder Verkleinern testen, bevor darum herum automatisiert wird.",
+      "domain_id": null,
+      "affects_node_ids": []
+    }
+  ],
+  "goal_tree": [
+    {
+      "evidence": [
+        {
+          "id": "ev-cap-4bcfdd9d18",
+          "source_id": "derived-flow-model",
+          "type": "load_capacity_calc",
+          "locator": null,
+          "quote": null,
+          "note": "inhaber zu 140% ausgelastet (25 von 18 h/Woche)"
+        },
+        {
+          "id": "ev-q-20127b361e",
+          "source_id": "src-92c35f5e42099358",
+          "type": "queue_observation",
+          "locator": null,
+          "quote": null,
+          "note": "Aufmaß: 46 in der Warteschlange, ~315 h Wartezeit"
+        },
+        {
+          "id": "ev-q-2831e7b8a8",
+          "source_id": "src-92c35f5e42099358",
+          "type": "queue_observation",
+          "locator": null,
+          "quote": null,
+          "note": "Angebot: ~74 h Wartezeit"
+        },
+        {
+          "id": "ev-q-99c997fe88",
+          "source_id": "src-92c35f5e42099358",
+          "type": "queue_observation",
+          "locator": null,
+          "quote": null,
+          "note": "Auftrag: ~162 h Wartezeit"
+        },
+        {
+          "id": "ev-q-563d698364",
+          "source_id": "src-92c35f5e42099358",
+          "type": "log_data",
+          "locator": "activity aufmass",
+          "quote": null,
+          "note": "Median 315 h Wartezeit vor 'aufmass' (p90 615 h, 76 Fälle, Ereignisprotokoll)"
+        },
+        {
+          "id": "ev-cap-d97b3fe31d",
+          "source_id": "src-92c35f5e42099358",
+          "type": "log_data",
+          "locator": null,
+          "quote": null,
+          "note": "Rückstand wächst: 13.0 Fälle/Woche rein gegen 2.2 raus; 122 offen gegen ~11 erwartet (Ereignisprotokoll; Randeffekte des Exports prüfen)"
+        },
+        {
+          "id": "ev-relief-9990f254b6",
+          "source_id": "derived-flow-model",
+          "type": "load_capacity_calc",
+          "locator": null,
+          "quote": null,
+          "note": "+10% Kapazität bei inhaber: Durchsatz 2.88 -> 3.16 Einheiten/Woche"
+        },
+        {
+          "id": "ev-starve-2133f65da1",
+          "source_id": "derived-flow-model",
+          "type": "load_capacity_calc",
+          "locator": null,
+          "quote": null,
+          "note": "nach inhaber (140%): buero 32%, montage 45%, werkstatt 50% -> Kapazität wartet/leer"
+        },
+        {
+          "id": "ev-queue-14c4870fa9",
+          "source_id": "src-92c35f5e42099358",
+          "type": "queue_observation",
+          "locator": "node log-aufmass",
+          "quote": null,
+          "note": "Aufmaß: 46 in der Warteschlange, ~315 h Wartezeit"
+        },
+        {
+          "id": "ev-queue-b2b04522b2",
+          "source_id": "src-92c35f5e42099358",
+          "type": "log_data",
+          "locator": "activity aufmass",
+          "quote": null,
+          "note": "Ereignisprotokoll: Median 315 h Wartezeit vor 'aufmass' (p90 615 h, n=76)"
+        },
+        {
+          "id": "ev-expedite-8e2c085c4c",
+          "source_id": "src-a630a66dbe217aeb",
+          "type": "expedite_signal",
+          "locator": "t=00:04:20.000",
+          "quote": "Berger: Das Aufmaß mache ich selbst, immer freitags und samstags",
+          "note": null
+        },
+        {
+          "id": "ev-absence-73e024416c",
+          "source_id": "src-a630a66dbe217aeb",
+          "type": "absence_test",
+          "locator": "t=00:08:30.000",
+          "quote": "Berger: Wenn ich im Urlaub bin, passiert beim Aufmaß gar nichts, dann stapeln sich die Anfragen.",
+          "note": null
+        }
+      ],
+      "assumption": false,
+      "confidence": null,
+      "id": "root",
+      "parent_id": null,
+      "statement": "Durchsatz bei Thomas Berger (Inhaber) von 2.9 auf 3.6 Einheiten/Woche steigern",
+      "metric": "Fertigstellungen/Woche bei Thomas Berger (Inhaber)",
+      "status": "open",
+      "kind": "root",
+      "tag": null,
+      "constraint_link": null,
+      "owner": null,
+      "focus_step": null,
+      "effort_days": null,
+      "rationale": "Thomas Berger (Inhaber) (inhaber) zu 140% ausgelastet in RACE-C (Abschluss)"
+    },
+    {
+      "evidence": [],
+      "assumption": true,
+      "confidence": 0.6,
+      "id": "opt-exploit-idle",
+      "parent_id": "root",
+      "statement": "inhaber nie auf Input warten oder Nebenarbeit machen lassen",
+      "metric": null,
+      "status": "chosen",
+      "kind": "option",
+      "tag": null,
+      "constraint_link": "acts_on",
+      "owner": null,
+      "focus_step": "exploit",
+      "effort_days": null,
+      "rationale": "Unclog focusing-step skeleton"
+    },
+    {
+      "evidence": [],
+      "assumption": true,
+      "confidence": 0.6,
+      "id": "opt-exploit-quality",
+      "parent_id": "root",
+      "statement": "Fehler und fehlende Infos abfangen, bevor Arbeit bei inhaber ankommt",
+      "metric": null,
+      "status": "chosen",
+      "kind": "option",
+      "tag": null,
+      "constraint_link": "protects",
+      "owner": null,
+      "focus_step": "exploit",
+      "effort_days": null,
+      "rationale": "Unclog focusing-step skeleton"
+    },
+    {
+      "evidence": [],
+      "assumption": true,
+      "confidence": 0.6,
+      "id": "opt-subordinate",
+      "parent_id": "root",
+      "statement": "Arbeit im Takt von inhaber freigeben (Seil, WIP-Limit, kleinere Lose)",
+      "metric": null,
+      "status": "chosen",
+      "kind": "option",
+      "tag": null,
+      "constraint_link": "gates_flow",
+      "owner": null,
+      "focus_step": "subordinate",
+      "effort_days": null,
+      "rationale": "Unclog focusing-step skeleton"
+    },
+    {
+      "evidence": [],
+      "assumption": true,
+      "confidence": 0.6,
+      "id": "opt-elevate",
+      "parent_id": "root",
+      "statement": "Kapazität bei inhaber erhöhen (Personal, Werkzeuge, KI-Unterstützung)",
+      "metric": null,
+      "status": "chosen",
+      "kind": "option",
+      "tag": null,
+      "constraint_link": "acts_on",
+      "owner": null,
+      "focus_step": "elevate",
+      "effort_days": null,
+      "rationale": "Unclog focusing-step skeleton"
+    },
+    {
+      "evidence": [],
+      "assumption": true,
+      "confidence": 0.6,
+      "id": "opt-policy",
+      "parent_id": "root",
+      "statement": "Regeln und Kennzahlen ändern, die Zeit von inhaber verschwenden",
+      "metric": null,
+      "status": "chosen",
+      "kind": "option",
+      "tag": null,
+      "constraint_link": "acts_on",
+      "owner": null,
+      "focus_step": "exploit",
+      "effort_days": null,
+      "rationale": "Unclog focusing-step skeleton"
+    },
+    {
+      "evidence": [],
+      "assumption": true,
+      "confidence": 0.7,
+      "id": "a1",
+      "parent_id": "opt-policy",
+      "statement": "Werkstattleiter Markus übernimmt nach 2 begleiteten Terminen die Hälfte der rund 9 Aufmaße pro Woche",
+      "metric": null,
+      "status": "chosen",
+      "kind": "base_action",
+      "tag": "non_ai",
+      "constraint_link": "acts_on",
+      "owner": null,
+      "focus_step": "exploit",
+      "effort_days": 5.0,
+      "rationale": null
+    },
+    {
+      "evidence": [],
+      "assumption": true,
+      "confidence": 0.7,
+      "id": "a2",
+      "parent_id": "opt-exploit-idle",
+      "statement": "Aufmaßtermine auch dienstags und donnerstags anbieten statt nur freitags und samstags",
+      "metric": null,
+      "status": "chosen",
+      "kind": "base_action",
+      "tag": "non_ai",
+      "constraint_link": "acts_on",
+      "owner": null,
+      "focus_step": "exploit",
+      "effort_days": 1.0,
+      "rationale": null
+    },
+    {
+      "evidence": [],
+      "assumption": true,
+      "confidence": 0.7,
+      "id": "a3",
+      "parent_id": "opt-exploit-quality",
+      "statement": "Vor jedem Aufmaß Fotos, Grundriss und Budget vom Kunden einholen und als Vorlage vorbereiten (ca. 9 Vorlagen pro Woche)",
+      "metric": null,
+      "status": "chosen",
+      "kind": "base_action",
+      "tag": "ai_doable",
+      "constraint_link": "protects",
+      "owner": null,
+      "focus_step": "exploit",
+      "effort_days": 4.0,
+      "rationale": null
+    },
+    {
+      "evidence": [],
+      "assumption": true,
+      "confidence": 0.7,
+      "id": "a4",
+      "parent_id": "opt-subordinate",
+      "statement": "Keine Google-Anzeigen schalten, solange mehr als 10 Kunden auf ein Aufmaß warten",
+      "metric": null,
+      "status": "chosen",
+      "kind": "base_action",
+      "tag": "non_ai",
+      "constraint_link": "gates_flow",
+      "owner": null,
+      "focus_step": "subordinate",
+      "effort_days": 1.0,
+      "rationale": null
+    },
+    {
+      "evidence": [],
+      "assumption": true,
+      "confidence": 0.7,
+      "id": "a5",
+      "parent_id": "opt-elevate",
+      "statement": "Zweiten Aufmaß-Laser und Tablet-Aufmaß-App für Markus anschaffen (Aufmaß 2 h -> 1,5 h)",
+      "metric": null,
+      "status": "chosen",
+      "kind": "base_action",
+      "tag": "human",
+      "constraint_link": "acts_on",
+      "owner": null,
+      "focus_step": "elevate",
+      "effort_days": 5.0,
+      "rationale": null
+    },
+    {
+      "evidence": [],
+      "assumption": true,
+      "confidence": 0.7,
+      "id": "x1",
+      "parent_id": "root",
+      "statement": "KI-Chatbot auf der Website für mehr Anfragen",
+      "metric": null,
+      "status": "pruned",
+      "kind": "base_action",
+      "tag": "ai_doable",
+      "constraint_link": "off_constraint",
+      "owner": null,
+      "focus_step": "exploit",
+      "effort_days": 5.0,
+      "rationale": null
+    }
+  ],
+  "opportunities": [
+    {
+      "evidence": [
+        {
+          "id": "ev-cap-4bcfdd9d18",
+          "source_id": "derived-flow-model",
+          "type": "load_capacity_calc",
+          "locator": null,
+          "quote": null,
+          "note": "inhaber zu 140% ausgelastet (25 von 18 h/Woche)"
+        },
+        {
+          "id": "ev-q-20127b361e",
+          "source_id": "src-92c35f5e42099358",
+          "type": "queue_observation",
+          "locator": null,
+          "quote": null,
+          "note": "Aufmaß: 46 in der Warteschlange, ~315 h Wartezeit"
+        },
+        {
+          "id": "ev-q-2831e7b8a8",
+          "source_id": "src-92c35f5e42099358",
+          "type": "queue_observation",
+          "locator": null,
+          "quote": null,
+          "note": "Angebot: ~74 h Wartezeit"
+        },
+        {
+          "id": "ev-q-99c997fe88",
+          "source_id": "src-92c35f5e42099358",
+          "type": "queue_observation",
+          "locator": null,
+          "quote": null,
+          "note": "Auftrag: ~162 h Wartezeit"
+        },
+        {
+          "id": "ev-q-563d698364",
+          "source_id": "src-92c35f5e42099358",
+          "type": "log_data",
+          "locator": "activity aufmass",
+          "quote": null,
+          "note": "Median 315 h Wartezeit vor 'aufmass' (p90 615 h, 76 Fälle, Ereignisprotokoll)"
+        },
+        {
+          "id": "ev-cap-d97b3fe31d",
+          "source_id": "src-92c35f5e42099358",
+          "type": "log_data",
+          "locator": null,
+          "quote": null,
+          "note": "Rückstand wächst: 13.0 Fälle/Woche rein gegen 2.2 raus; 122 offen gegen ~11 erwartet (Ereignisprotokoll; Randeffekte des Exports prüfen)"
+        },
+        {
+          "id": "ev-relief-9990f254b6",
+          "source_id": "derived-flow-model",
+          "type": "load_capacity_calc",
+          "locator": null,
+          "quote": null,
+          "note": "+10% Kapazität bei inhaber: Durchsatz 2.88 -> 3.16 Einheiten/Woche"
+        },
+        {
+          "id": "ev-starve-2133f65da1",
+          "source_id": "derived-flow-model",
+          "type": "load_capacity_calc",
+          "locator": null,
+          "quote": null,
+          "note": "nach inhaber (140%): buero 32%, montage 45%, werkstatt 50% -> Kapazität wartet/leer"
+        },
+        {
+          "id": "ev-queue-14c4870fa9",
+          "source_id": "src-92c35f5e42099358",
+          "type": "queue_observation",
+          "locator": "node log-aufmass",
+          "quote": null,
+          "note": "Aufmaß: 46 in der Warteschlange, ~315 h Wartezeit"
+        },
+        {
+          "id": "ev-queue-b2b04522b2",
+          "source_id": "src-92c35f5e42099358",
+          "type": "log_data",
+          "locator": "activity aufmass",
+          "quote": null,
+          "note": "Ereignisprotokoll: Median 315 h Wartezeit vor 'aufmass' (p90 615 h, n=76)"
+        },
+        {
+          "id": "ev-expedite-8e2c085c4c",
+          "source_id": "src-a630a66dbe217aeb",
+          "type": "expedite_signal",
+          "locator": "t=00:04:20.000",
+          "quote": "Berger: Das Aufmaß mache ich selbst, immer freitags und samstags",
+          "note": null
+        },
+        {
+          "id": "ev-absence-73e024416c",
+          "source_id": "src-a630a66dbe217aeb",
+          "type": "absence_test",
+          "locator": "t=00:08:30.000",
+          "quote": "Berger: Wenn ich im Urlaub bin, passiert beim Aufmaß gar nichts, dann stapeln sich die Anfragen.",
+          "note": null
+        }
+      ],
+      "assumption": false,
+      "confidence": 0.7,
+      "id": "opp-a3",
+      "goal_node_ids": [
+        "a3"
+      ],
+      "task_ids": [],
+      "title": "Aufmaß-Vorlage aus Kundenfotos, Grundriss und Budget für ca. 9 Termine pro Woche aus dem CRM vorbereiten",
+      "pattern": "constraint-prestaging",
+      "ai_role": "assist",
+      "position": "upstream",
+      "focus_step": "exploit",
+      "constraint_id": "con-RACE-C-inhaber",
+      "constraint_link": "protects",
+      "proven": true,
+      "proof_refs": [
+        "lib:constraint-prestaging",
+        "Goldratt, The Goal (core TOC: exploit/subordinate, batch size, DBR)"
+      ],
+      "rd_label": false,
+      "process_health_ok": true,
+      "client_owner": "Büroleitung",
+      "delta": {
+        "T": {
+          "amount": 0.0,
+          "validated_by": "none",
+          "sim_run_id": null,
+          "demand_can_absorb": null,
+          "lag": null
+        },
+        "I": {
+          "amount": 0.0,
+          "carrying_cost_rate": 0.0,
+          "measurement_method": null
+        },
+        "OE": {
+          "amount": 0.0,
+          "capacity_released_h": 0.0,
+          "realization_path": null,
+          "lag": null
+        },
+        "currency": "EUR",
+        "period": "month"
+      },
+      "wip_side_effects": null,
+      "release_gate_required": true,
+      "release_gate_design": "genau eine Vorlage je bestätigtem Termin, nicht mehr",
+      "human_in_loop_design": "Büro prüft jede Vorlage vor dem Termin; der Aufmesser korrigiert vor Ort",
+      "review_load_h_per_week": 0.75,
+      "reviewer_resource_id": "buero",
+      "tech_approach": "CRM-Export + Fotos + Prompt",
+      "build_vs_buy": "build",
+      "risk_ids": [
+        "risk-a3-1"
+      ],
+      "scores": {
+        "constraint_relevance": {
+          "score": 4,
+          "justification": "goal-tree link protects"
+        },
+        "throughput_impact": {
+          "score": 4,
+          "justification": "vorbereitete Vorlagen verkürzen jedes Aufmaß"
+        },
+        "feasibility": {
+          "score": 4,
+          "justification": "vorbereitete Vorlagen verkürzen jedes Aufmaß"
+        },
+        "data_readiness": {
+          "score": 4,
+          "justification": "vorbereitete Vorlagen verkürzen jedes Aufmaß"
+        },
+        "risk": {
+          "score": 4,
+          "justification": "vorbereitete Vorlagen verkürzen jedes Aufmaß"
+        },
+        "effort": {
+          "score": 4,
+          "justification": "vorbereitete Vorlagen verkürzen jedes Aufmaß"
+        },
+        "proven_ness": {
+          "score": 5,
+          "justification": "library: established"
+        },
+        "ownership_clarity": {
+          "score": 4,
+          "justification": "owner: Büroleitung"
+        },
+        "strategic_fit": {
+          "score": 4,
+          "justification": "vorbereitete Vorlagen verkürzen jedes Aufmaß"
+        }
+      },
+      "priority": "exploit-now",
+      "assumptions": [
+        "exploit the constraint first (§8.7)",
+        "process health at RACE-C not yet assessed; confirm the process is sound before building (brief §9.8)"
+      ]
+    }
+  ],
+  "risks": [
+    {
+      "evidence": [],
+      "assumption": true,
+      "confidence": 0.7,
+      "id": "risk-a3-1",
+      "description": "Kundenfotos enthalten personenbezogene Daten",
+      "category": "compliance",
+      "likelihood": 3,
+      "impact": 2,
+      "mitigation": "Löschfrist, AV-Vertrag mit Anbieter",
+      "owner": null
+    }
+  ],
+  "value_model": {
+    "evidence": [],
+    "assumption": true,
+    "confidence": 0.5,
+    "id": "value-model",
+    "lines": [
+      {
+        "opportunity_id": "opp-a3",
+        "scenario": "low",
+        "delta_t": 7583.33,
+        "delta_oe_realized": 0.0,
+        "delta_i_carrying": -16.63,
+        "run_cost": 222.65,
+        "amortized_build": 333.33,
+        "delta_profit": 7043.98
+      },
+      {
+        "opportunity_id": "opp-a3",
+        "scenario": "base",
+        "delta_t": 7583.33,
+        "delta_oe_realized": 0.0,
+        "delta_i_carrying": -22.42,
+        "run_cost": 222.65,
+        "amortized_build": 333.33,
+        "delta_profit": 7049.77
+      },
+      {
+        "opportunity_id": "opp-a3",
+        "scenario": "high",
+        "delta_t": 17565.48,
+        "delta_oe_realized": 0.0,
+        "delta_i_carrying": -100.03,
+        "run_cost": 222.65,
+        "amortized_build": 333.33,
+        "delta_profit": 17109.53
+      },
+      {
+        "opportunity_id": "act-a1",
+        "scenario": "low",
+        "delta_t": 18261.9,
+        "delta_oe_realized": 0.0,
+        "delta_i_carrying": -111.04,
+        "run_cost": 0.0,
+        "amortized_build": 125.0,
+        "delta_profit": 18247.94
+      },
+      {
+        "opportunity_id": "act-a1",
+        "scenario": "base",
+        "delta_t": 26773.81,
+        "delta_oe_realized": 0.0,
+        "delta_i_carrying": -165.68,
+        "run_cost": 0.0,
+        "amortized_build": 125.0,
+        "delta_profit": 26814.49
+      },
+      {
+        "opportunity_id": "act-a1",
+        "scenario": "high",
+        "delta_t": 25690.48,
+        "delta_oe_realized": 0.0,
+        "delta_i_carrying": -204.45,
+        "run_cost": 0.0,
+        "amortized_build": 125.0,
+        "delta_profit": 25769.93
+      }
+    ],
+    "mirage_ledger": [],
+    "dedup_notes": [
+      "base ΔT together 27,161 vs sum of parts 34,357 EUR/month: gains overlap on shared constraint capacity; report the joint figure"
+    ],
+    "expected_lag": "leading indicators in 2–4 weeks; money in 1–3 months",
+    "as_of": null
+  },
+  "roadmap": [
+    {
+      "wave": "measure",
+      "title": "Belegte Kennzahl für RACE-R (Reichweite) beschaffen: Besucher/Impressionen pro Woche, Werbebudget, Anzahl Werbemittel",
+      "kind": "instrumentation",
+      "ref": null,
+      "owner": null,
+      "effort_days": null,
+      "start_condition": null,
+      "reason": "coverage gap (G5)"
+    },
+    {
+      "wave": "measure",
+      "title": "Belegte Kennzahl für RACE-E (Bestandskunden) beschaffen: Kündigungen, Wiederkauf-/Upsell-Quote, Kundenwert",
+      "kind": "instrumentation",
+      "ref": null,
+      "owner": null,
+      "effort_days": null,
+      "start_condition": null,
+      "reason": "coverage gap (G5)"
+    },
+    {
+      "wave": "measure",
+      "title": "Belegte Kennzahl für Betrieb/Produktion beschaffen: Auslastung und Warteschlangen je Team/Maschine",
+      "kind": "instrumentation",
+      "ref": null,
+      "owner": null,
+      "effort_days": null,
+      "start_condition": null,
+      "reason": "coverage gap (G5)"
+    },
+    {
+      "wave": "measure",
+      "title": "Belegte Kennzahl für Kundenservice beschaffen: Ticket-Rückstand, Zeit bis Erstantwort und Lösung",
+      "kind": "instrumentation",
+      "ref": null,
+      "owner": null,
+      "effort_days": null,
+      "start_condition": null,
+      "reason": "coverage gap (G5)"
+    },
+    {
+      "wave": "measure",
+      "title": "Belegte Kennzahl für Finanzen beschaffen: Zeit bis Rechnung, Zahlungsziel (DSO), Monatsabschluss, Freigabe-Wartezeit",
+      "kind": "instrumentation",
+      "ref": null,
+      "owner": null,
+      "effort_days": null,
+      "start_condition": null,
+      "reason": "coverage gap (G5)"
+    },
+    {
+      "wave": "measure",
+      "title": "Belegte Kennzahl für Personal beschaffen: Zeit bis Einstellung, offene Schlüsselstellen, Einarbeitungszeit",
+      "kind": "instrumentation",
+      "ref": null,
+      "owner": null,
+      "effort_days": null,
+      "start_condition": null,
+      "reason": "coverage gap (G5)"
+    },
+    {
+      "wave": "exploit",
+      "title": "Werkstattleiter Markus übernimmt nach 2 begleiteten Terminen die Hälfte der rund 9 Aufmaße pro Woche",
+      "kind": "policy",
+      "ref": "a1",
+      "owner": null,
+      "effort_days": 5.0,
+      "start_condition": null,
+      "reason": null
+    },
+    {
+      "wave": "exploit",
+      "title": "Aufmaßtermine auch dienstags und donnerstags anbieten statt nur freitags und samstags",
+      "kind": "non_ai",
+      "ref": "a2",
+      "owner": null,
+      "effort_days": 1.0,
+      "start_condition": null,
+      "reason": null
+    },
+    {
+      "wave": "exploit",
+      "title": "Aufmaß-Vorlage aus Kundenfotos, Grundriss und Budget für ca. 9 Termine pro Woche aus dem CRM vorbereiten",
+      "kind": "opportunity",
+      "ref": "opp-a3",
+      "owner": "Büroleitung",
+      "effort_days": null,
+      "start_condition": "nach Freigabe-Tor-Design",
+      "reason": null
+    },
+    {
+      "wave": "subordinate",
+      "title": "Keine Google-Anzeigen schalten, solange mehr als 10 Kunden auf ein Aufmaß warten",
+      "kind": "non_ai",
+      "ref": "a4",
+      "owner": null,
+      "effort_days": 1.0,
+      "start_condition": null,
+      "reason": null
+    },
+    {
+      "wave": "elevate",
+      "title": "Zweiten Aufmaß-Laser und Tablet-Aufmaß-App für Markus anschaffen (Aufmaß 2 h -> 1,5 h)",
+      "kind": "non_ai",
+      "ref": "a5",
+      "owner": null,
+      "effort_days": 5.0,
+      "start_condition": "startet, wenn Ergebnisse aus Welle 1 im Results Ledger stehen",
+      "reason": null
+    }
+  ]
+}

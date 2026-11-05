@@ -6,10 +6,81 @@ from datetime import datetime
 
 from .models import Event, EventLog, TableData
 
-CASE = ("case_id", "case", "caseid", "ticket_id", "order_id", "lead_id", "deal_id", "id_case")
-ACTIVITY = ("activity", "event", "status", "stage", "step", "action")
-TIMESTAMP = ("timestamp", "time", "datetime", "date", "created_at", "event_time", "changed_at")
-RESOURCE = ("resource", "user", "owner", "agent", "assignee", "employee")
+# English and German column names (German exports: DATEV, Lexware, CRM, Shop systems)
+CASE = (
+    "case_id",
+    "case",
+    "caseid",
+    "ticket_id",
+    "order_id",
+    "lead_id",
+    "deal_id",
+    "id_case",
+    "vorgang_id",
+    "vorgangsnummer",
+    "vorgang_nr",
+    "vorgang",
+    "auftrag_id",
+    "auftragsnummer",
+    "auftrag_nr",
+    "anfrage_id",
+    "anfragenummer",
+    "ticket_nr",
+    "ticketnummer",
+    "fall_id",
+    "projekt_id",
+    "projektnummer",
+    "bestellnummer",
+    "bestell_nr",
+)
+ACTIVITY = (
+    "activity",
+    "event",
+    "status",
+    "stage",
+    "step",
+    "action",
+    "aktivitaet",
+    "aktivität",
+    "ereignis",
+    "schritt",
+    "phase",
+    "statusname",
+    "bearbeitungsstatus",
+)
+TIMESTAMP = (
+    "timestamp",
+    "time",
+    "datetime",
+    "date",
+    "created_at",
+    "event_time",
+    "changed_at",
+    "zeitpunkt",
+    "zeitstempel",
+    "datum",
+    "datum_uhrzeit",
+    "zeit",
+    "erstellt_am",
+    "geaendert_am",
+    "geändert_am",
+    "aenderungsdatum",
+    "änderungsdatum",
+)
+RESOURCE = (
+    "resource",
+    "user",
+    "owner",
+    "agent",
+    "assignee",
+    "employee",
+    "bearbeiter",
+    "mitarbeiter",
+    "zustaendig",
+    "zuständig",
+    "verantwortlich",
+    "benutzer",
+)
 
 
 def _norm(c: str) -> str:

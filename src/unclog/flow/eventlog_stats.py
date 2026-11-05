@@ -99,6 +99,11 @@ def compute(log: EventLog, end_activities: list[str] | None = None) -> EventLogS
     t1 = max(e.timestamp for e in log.events)
     span_days = max(_hours(t0, t1) / 24, 1.0)
     weeks = span_days / 7
+    # Arrivals are counted over the window in which cases *started*; the tail of the log
+    # (late steps of old cases) would otherwise dilute the rate.
+    starts = sorted(evs[0].timestamp for evs in by_case.values())
+    arrival_weeks = max(_hours(starts[0], starts[-1]) / 168, 1 / 7) if len(starts) > 1 else weeks
+    arrival_weeks *= len(starts) / max(len(starts) - 1, 1)  # n arrivals span n-1 gaps
     activities = {
         a: ActivityStats(
             activity=a,
@@ -114,7 +119,7 @@ def compute(log: EventLog, end_activities: list[str] | None = None) -> EventLogS
         completed_cases=completed,
         open_cases=len(by_case) - completed,
         span_days=span_days,
-        arrivals_per_week=len(by_case) / weeks,
+        arrivals_per_week=len(by_case) / arrival_weeks,
         completions_per_week=completed / weeks,
         lead_time_median_h=statistics.median(lead_times) if lead_times else None,
         lead_time_p90_h=_pct(lead_times, 0.9) if lead_times else None,
