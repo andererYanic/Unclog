@@ -1,0 +1,213 @@
+{
+  "id": "broken_process_invoicing",
+  "title": "Engineering firm: invoices go out weeks late",
+  "kind": "backend",
+  "traps": [
+    "broken process: must return fix-process-first, not automation"
+  ],
+  "description": "One bookkeeper re-keys project hours from three spreadsheets that disagree; 45 finished projects wait for an invoice. Automating the re-keying would automate a broken process.",
+  "sources": [
+    {
+      "id": "src-datev-export",
+      "kind": "export",
+      "title": "Accounting export"
+    },
+    {
+      "id": "src-intv-bookkeeper",
+      "kind": "interview",
+      "title": "Call with bookkeeper"
+    }
+  ],
+  "resources": [
+    {
+      "id": "bookkeeper",
+      "name": "Bookkeeper",
+      "kind": "person",
+      "count": 1,
+      "hours_per_period": 20,
+      "evidence": [
+        {
+          "id": "ev-4",
+          "source_id": "src-datev-export",
+          "type": "document",
+          "locator": "org chart"
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "id": "work-done",
+      "name": "Project finished",
+      "domain_id": "fulfillment",
+      "arrival": {
+        "kind": "poisson",
+        "params": {
+          "rate": 30
+        },
+        "unit": "week"
+      },
+      "evidence": [
+        {
+          "id": "ev-1",
+          "source_id": "src-datev-export",
+          "type": "log_data",
+          "locator": "project close dates"
+        }
+      ]
+    },
+    {
+      "id": "invoice",
+      "name": "Write invoice",
+      "domain_id": "finance",
+      "resource_ids": [
+        "bookkeeper"
+      ],
+      "service": {
+        "kind": "lognormal",
+        "params": {
+          "mean": 0.8,
+          "cv": 0.5
+        },
+        "unit": "hour"
+      },
+      "queue_length": 45,
+      "wait_time_h": 200,
+      "evidence": [
+        {
+          "id": "ev-2",
+          "source_id": "src-datev-export",
+          "type": "queue_observation",
+          "locator": "finished, not invoiced"
+        },
+        {
+          "id": "ev-3",
+          "source_id": "src-intv-bookkeeper",
+          "type": "interview_claim",
+          "locator": "t=00:04:00",
+          "quote": "I copy the hours from three spreadsheets and they never match."
+        }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "source": "work-done",
+      "target": "invoice",
+      "probability": 1.0
+    }
+  ],
+  "metrics": [
+    {
+      "id": "dso",
+      "domain_id": "finance",
+      "name": "days sales outstanding",
+      "value": 61,
+      "unit": "days",
+      "period": "2026-10",
+      "measured": true,
+      "source_id": "src-datev-export",
+      "benchmark": 30,
+      "higher_is_better": false
+    }
+  ],
+  "process_health": {
+    "finance": "broken"
+  },
+  "design": {
+    "seeds": [
+      {
+        "id": "inv-1",
+        "parent_id": "opt-x",
+        "kind": "base_action",
+        "statement": "Prepare 30 invoice drafts per week from the three hour spreadsheets automatically",
+        "tag": "ai_doable",
+        "focus_step": "exploit",
+        "constraint_link": "acts_on",
+        "effort_days": 3,
+        "assumption": true,
+        "confidence": 0.6
+      }
+    ],
+    "analyst": {
+      "judgements": [
+        {
+          "seed_id": "inv-1",
+          "pattern_id": null,
+          "title": "system for inv-1",
+          "ai_role": "assist",
+          "human_in_loop_design": "a person checks every output",
+          "release_gate_design": null,
+          "items_per_week": 30,
+          "review_minutes_per_item": 2,
+          "reviewer_resource_id": "bookkeeper",
+          "output_verification": "spot checks",
+          "cost_of_error": "medium",
+          "client_owner_role": "Head of finance",
+          "tech_approach": "export + prompt",
+          "build_vs_buy": "build",
+          "scores": {
+            "throughput_impact": {
+              "score": 3,
+              "justification": "scripted for the rule-layer eval"
+            },
+            "feasibility": {
+              "score": 3,
+              "justification": "scripted for the rule-layer eval"
+            },
+            "data_readiness": {
+              "score": 3,
+              "justification": "scripted for the rule-layer eval"
+            },
+            "risk": {
+              "score": 3,
+              "justification": "scripted for the rule-layer eval"
+            },
+            "effort": {
+              "score": 3,
+              "justification": "scripted for the rule-layer eval"
+            },
+            "strategic_fit": {
+              "score": 3,
+              "justification": "scripted for the rule-layer eval"
+            }
+          }
+        }
+      ],
+      "confidence": 0.6
+    }
+  },
+  "expected": {
+    "top_domain": "finance",
+    "binding": {
+      "type": "physical",
+      "domain": "finance",
+      "target_contains": "bookkeeper"
+    },
+    "opportunities": {
+      "inv-1": {
+        "priority": "fix-process-first"
+      }
+    }
+  },
+  "goal": {
+    "statement": "Make money now and in the future: get paid for finished projects",
+    "unit_of_throughput": "invoiced project",
+    "t_definition": "revenue minus truly variable costs per invoiced project (~50% of price)",
+    "i_definition": "WIP, open orders/quotes, tools",
+    "oe_definition": "payroll, licences, rent, inference",
+    "baseline": {
+      "currency": "EUR",
+      "period": "month"
+    },
+    "horizon": "12 months",
+    "evidence": [
+      {
+        "id": "ev-goal-broken_process_invoicing",
+        "source_id": "src-intv-bookkeeper",
+        "type": "interview_claim",
+        "locator": "first call"
+      }
+    ]
+  }
+}

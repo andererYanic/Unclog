@@ -1,0 +1,198 @@
+{
+  "id": "reviewer_flood_leads",
+  "title": "Renovation company: AI drafts would bury the sales team",
+  "kind": "race",
+  "traps": [
+    "generative output that would flood a reviewer (G8)"
+  ],
+  "description": "Two SDRs already cannot keep up with 120 enquiries a week. Drafting a reply for every enquiry and having the SDRs review each one adds 12 h of review a week at the constraint.",
+  "sources": [
+    {
+      "id": "src-crm-reno",
+      "kind": "export",
+      "title": "CRM export"
+    }
+  ],
+  "resources": [
+    {
+      "id": "sdr-team",
+      "name": "2 SDRs",
+      "kind": "team",
+      "count": 2,
+      "hours_per_period": 20,
+      "evidence": [
+        {
+          "id": "ev-1",
+          "source_id": "src-crm-reno",
+          "type": "document",
+          "locator": "roles"
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "id": "enquiry",
+      "name": "Enquiry",
+      "domain_id": "RACE-R",
+      "arrival": {
+        "kind": "poisson",
+        "params": {
+          "rate": 120
+        },
+        "unit": "week"
+      },
+      "evidence": [
+        {
+          "id": "ev-2",
+          "source_id": "src-crm-reno",
+          "type": "log_data",
+          "locator": "enquiries"
+        }
+      ]
+    },
+    {
+      "id": "qualify",
+      "name": "Answer and qualify",
+      "domain_id": "RACE-A",
+      "resource_ids": [
+        "sdr-team"
+      ],
+      "service": {
+        "kind": "gamma",
+        "params": {
+          "shape": 3,
+          "scale": 0.117
+        },
+        "unit": "hour"
+      },
+      "queue_length": 60,
+      "wait_time_h": 70,
+      "evidence": [
+        {
+          "id": "ev-3",
+          "source_id": "src-crm-reno",
+          "type": "queue_observation",
+          "locator": "unanswered enquiries"
+        }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "source": "enquiry",
+      "target": "qualify",
+      "probability": 1.0
+    }
+  ],
+  "metrics": [
+    {
+      "id": "speed",
+      "domain_id": "RACE-A",
+      "name": "median first response",
+      "value": 70,
+      "unit": "h",
+      "period": "2026-10",
+      "measured": true,
+      "source_id": "src-crm-reno",
+      "benchmark": 1,
+      "higher_is_better": false
+    }
+  ],
+  "design": {
+    "seeds": [
+      {
+        "id": "lead-1",
+        "parent_id": "opt-x",
+        "kind": "base_action",
+        "statement": "Draft a reply to all 120 enquiries per week; SDRs review every draft before sending",
+        "tag": "ai_doable",
+        "focus_step": "exploit",
+        "constraint_link": "acts_on",
+        "effort_days": 3,
+        "assumption": true,
+        "confidence": 0.6
+      }
+    ],
+    "analyst": {
+      "judgements": [
+        {
+          "seed_id": "lead-1",
+          "pattern_id": "speed-to-lead-responder",
+          "title": "system for lead-1",
+          "ai_role": "assist",
+          "human_in_loop_design": "a person checks every output",
+          "release_gate_design": null,
+          "items_per_week": 120,
+          "review_minutes_per_item": 6,
+          "reviewer_resource_id": "sdr-team",
+          "output_verification": "spot checks",
+          "cost_of_error": "medium",
+          "client_owner_role": "Sales lead",
+          "tech_approach": "export + prompt",
+          "build_vs_buy": "build",
+          "scores": {
+            "throughput_impact": {
+              "score": 3,
+              "justification": "scripted for the rule-layer eval"
+            },
+            "feasibility": {
+              "score": 3,
+              "justification": "scripted for the rule-layer eval"
+            },
+            "data_readiness": {
+              "score": 3,
+              "justification": "scripted for the rule-layer eval"
+            },
+            "risk": {
+              "score": 3,
+              "justification": "scripted for the rule-layer eval"
+            },
+            "effort": {
+              "score": 3,
+              "justification": "scripted for the rule-layer eval"
+            },
+            "strategic_fit": {
+              "score": 3,
+              "justification": "scripted for the rule-layer eval"
+            }
+          }
+        }
+      ],
+      "confidence": 0.6
+    }
+  },
+  "expected": {
+    "top_domain": "RACE-A",
+    "binding": {
+      "type": "physical",
+      "domain": "RACE-A"
+    },
+    "opportunities": {
+      "lead-1": {
+        "priority": "defer",
+        "g8": true
+      }
+    }
+  },
+  "goal": {
+    "statement": "Make money now and in the future: win more renovation jobs",
+    "unit_of_throughput": "signed job",
+    "t_definition": "revenue minus truly variable costs per signed job (~35% of price)",
+    "i_definition": "WIP, open orders/quotes, tools",
+    "oe_definition": "payroll, licences, rent, inference",
+    "baseline": {
+      "currency": "EUR",
+      "period": "month"
+    },
+    "horizon": "12 months",
+    "evidence": [
+      {
+        "id": "ev-goal-reviewer_flood_leads",
+        "source_id": "src-crm-reno",
+        "type": "interview_claim",
+        "locator": "first call"
+      }
+    ]
+  }
+}

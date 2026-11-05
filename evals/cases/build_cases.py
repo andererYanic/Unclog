@@ -60,6 +60,21 @@ GOALS = {
         "delivered order",
         0.45,
     ),
+    "broken_process_invoicing": (
+        "Make money now and in the future: get paid for finished projects",
+        "invoiced project",
+        0.50,
+    ),
+    "unowned_system_support": (
+        "Make money now and in the future: keep subscribers paying",
+        "paying customer month",
+        0.80,
+    ),
+    "reviewer_flood_leads": (
+        "Make money now and in the future: win more renovation jobs",
+        "signed job",
+        0.35,
+    ),
     "conflicting_testimony": (
         "Make money now and in the future: grow recurring revenue",
         "paying customer month",
@@ -893,6 +908,285 @@ def conflicting_testimony() -> dict:
     }
 
 
+# --------------------------------------------------------------------------------------------
+# Rule-layer traps (brief §18). Each carries a scripted design (fixed model answers) so the
+# eval checks our code's rules, not a model: fix-process-first, R&D / no owner, G8 flooding.
+# --------------------------------------------------------------------------------------------
+def _seed(id_, statement, tag="ai_doable", link="acts_on", step="exploit"):
+    return {
+        "id": id_,
+        "parent_id": "opt-x",
+        "kind": "base_action",
+        "statement": statement,
+        "tag": tag,
+        "focus_step": step,
+        "constraint_link": link,
+        "effort_days": 3,
+        "assumption": True,
+        "confidence": 0.6,
+    }
+
+
+def _judgement(seed_id, pattern, owner, items=0, minutes=0, reviewer=None, gate=None):
+    sc = {"score": 3, "justification": "scripted for the rule-layer eval"}
+    return {
+        "seed_id": seed_id,
+        "pattern_id": pattern,
+        "title": f"system for {seed_id}",
+        "ai_role": "assist",
+        "human_in_loop_design": "a person checks every output",
+        "release_gate_design": gate,
+        "items_per_week": items,
+        "review_minutes_per_item": minutes,
+        "reviewer_resource_id": reviewer,
+        "output_verification": "spot checks",
+        "cost_of_error": "medium",
+        "client_owner_role": owner,
+        "tech_approach": "export + prompt",
+        "build_vs_buy": "build",
+        "scores": {
+            k: sc
+            for k in (
+                "throughput_impact",
+                "feasibility",
+                "data_readiness",
+                "risk",
+                "effort",
+                "strategic_fit",
+            )
+        },
+    }
+
+
+def broken_process_invoicing() -> dict:
+    datev, intv = "src-datev-export", "src-intv-bookkeeper"
+    nodes = [
+        {
+            "id": "work-done",
+            "name": "Project finished",
+            "domain_id": "fulfillment",
+            "arrival": {"kind": "poisson", "params": {"rate": 30}, "unit": "week"},
+            "evidence": [ev(1, datev, "log_data", "project close dates")],
+        },
+        {
+            "id": "invoice",
+            "name": "Write invoice",
+            "domain_id": "finance",
+            "resource_ids": ["bookkeeper"],
+            "service": {"kind": "lognormal", "params": {"mean": 0.8, "cv": 0.5}, "unit": "hour"},
+            "queue_length": 45,
+            "wait_time_h": 200,
+            "evidence": [
+                ev(2, datev, "queue_observation", "finished, not invoiced"),
+                ev(
+                    3,
+                    intv,
+                    "interview_claim",
+                    "t=00:04:00",
+                    "I copy the hours from three spreadsheets and they never match.",
+                ),
+            ],
+        },
+    ]
+    return {
+        "id": "broken_process_invoicing",
+        "title": "Engineering firm: invoices go out weeks late",
+        "kind": "backend",
+        "traps": ["broken process: must return fix-process-first, not automation"],
+        "description": "One bookkeeper re-keys project hours from three spreadsheets that "
+        "disagree; 45 finished projects wait for an invoice. Automating the "
+        "re-keying would automate a broken process.",
+        "sources": [
+            {"id": datev, "kind": "export", "title": "Accounting export"},
+            {"id": intv, "kind": "interview", "title": "Call with bookkeeper"},
+        ],
+        "resources": [
+            {
+                "id": "bookkeeper",
+                "name": "Bookkeeper",
+                "kind": "person",
+                "count": 1,
+                "hours_per_period": 20,
+                "evidence": [ev(4, datev, "document", "org chart")],
+            }
+        ],
+        "nodes": nodes,
+        "edges": [{"source": "work-done", "target": "invoice", "probability": 1.0}],
+        "metrics": [
+            m("dso", "finance", "days sales outstanding", 61, "days", src=datev, bm=30, hib=False)
+        ],
+        "process_health": {"finance": "broken"},
+        "design": {
+            "seeds": [
+                _seed(
+                    "inv-1",
+                    "Prepare 30 invoice drafts per week from the "
+                    "three hour spreadsheets automatically",
+                )
+            ],
+            "analyst": {
+                "judgements": [_judgement("inv-1", None, "Head of finance", 30, 2, "bookkeeper")],
+                "confidence": 0.6,
+            },
+        },
+        "expected": {
+            "top_domain": "finance",
+            "binding": {"type": "physical", "domain": "finance", "target_contains": "bookkeeper"},
+            "opportunities": {"inv-1": {"priority": "fix-process-first"}},
+        },
+    }
+
+
+def unowned_system_support() -> dict:
+    hd = "src-helpdesk-2"
+    return {
+        "id": "unowned_system_support",
+        "title": "Subscription box: support is drowning, nobody owns new tools",
+        "kind": "backend",
+        "traps": [
+            "proposed new system nobody owns (R&D or reshape)",
+            "flashy novel AI idea at the constraint",
+        ],
+        "description": "Support is the constraint. One idea is a novel AI phone agent (no "
+        "proven pattern), the other a proven ticket triage, but nobody at the "
+        "client would own either.",
+        "sources": [{"id": hd, "kind": "event_log", "title": "Helpdesk export"}],
+        "resources": [
+            {
+                "id": "support-team",
+                "name": "Support agents",
+                "kind": "team",
+                "count": 3,
+                "hours_per_period": 35,
+                "evidence": [ev(1, hd, "log_data", "agents")],
+            }
+        ],
+        "nodes": [
+            {
+                "id": "tickets",
+                "name": "Customer tickets",
+                "domain_id": "support",
+                "arrival": {"kind": "poisson", "params": {"rate": 140}, "unit": "week"},
+                "evidence": [ev(2, hd, "log_data", "tickets created")],
+            },
+            {
+                "id": "answer",
+                "name": "Answer ticket",
+                "domain_id": "support",
+                "resource_ids": ["support-team"],
+                "service": {
+                    "kind": "lognormal",
+                    "params": {"mean": 0.85, "cv": 0.8},
+                    "unit": "hour",
+                },
+                "queue_length": 120,
+                "wait_time_h": 90,
+                "evidence": [ev(3, hd, "queue_observation", "open tickets")],
+            },
+        ],
+        "edges": [{"source": "tickets", "target": "answer", "probability": 1.0}],
+        "metrics": [m("frt", "support", "first response", 90, "h", src=hd, bm=8, hib=False)],
+        "design": {
+            "seeds": [
+                _seed("sup-1", "AI phone agent calls back unhappy customers with a cloned voice"),
+                _seed(
+                    "sup-2",
+                    "Triage 140 tickets per week and draft replies for the agents",
+                    tag="ai_assisted",
+                ),
+            ],
+            "analyst": {
+                "judgements": [
+                    _judgement("sup-1", None, None),
+                    _judgement("sup-2", "ticket-triage-drafting", None),
+                ],
+                "confidence": 0.6,
+            },
+        },
+        "expected": {
+            "top_domain": "support",
+            "binding": {"type": "physical", "domain": "support"},
+            "opportunities": {
+                "sup-1": {"priority": "strategic bet", "rd_label": True},
+                "sup-2": {"priority": "defer", "rd_label": False},
+            },
+        },
+    }
+
+
+def reviewer_flood_leads() -> dict:
+    crm = "src-crm-reno"
+    return {
+        "id": "reviewer_flood_leads",
+        "title": "Renovation company: AI drafts would bury the sales team",
+        "kind": "race",
+        "traps": ["generative output that would flood a reviewer (G8)"],
+        "description": "Two SDRs already cannot keep up with 120 enquiries a week. Drafting a "
+        "reply for every enquiry and having the SDRs review each one adds 12 h "
+        "of review a week at the constraint.",
+        "sources": [{"id": crm, "kind": "export", "title": "CRM export"}],
+        "resources": [
+            {
+                "id": "sdr-team",
+                "name": "2 SDRs",
+                "kind": "team",
+                "count": 2,
+                "hours_per_period": 20,
+                "evidence": [ev(1, crm, "document", "roles")],
+            }
+        ],
+        "nodes": [
+            {
+                "id": "enquiry",
+                "name": "Enquiry",
+                "domain_id": "RACE-R",
+                "arrival": {"kind": "poisson", "params": {"rate": 120}, "unit": "week"},
+                "evidence": [ev(2, crm, "log_data", "enquiries")],
+            },
+            {
+                "id": "qualify",
+                "name": "Answer and qualify",
+                "domain_id": "RACE-A",
+                "resource_ids": ["sdr-team"],
+                "service": {
+                    "kind": "gamma",
+                    "params": {"shape": 3, "scale": 0.117},
+                    "unit": "hour",
+                },
+                "queue_length": 60,
+                "wait_time_h": 70,
+                "evidence": [ev(3, crm, "queue_observation", "unanswered enquiries")],
+            },
+        ],
+        "edges": [{"source": "enquiry", "target": "qualify", "probability": 1.0}],
+        "metrics": [
+            m("speed", "RACE-A", "median first response", 70, "h", src=crm, bm=1, hib=False)
+        ],
+        "design": {
+            "seeds": [
+                _seed(
+                    "lead-1",
+                    "Draft a reply to all 120 enquiries per week; "
+                    "SDRs review every draft before sending",
+                )
+            ],
+            "analyst": {
+                "judgements": [
+                    _judgement(
+                        "lead-1", "speed-to-lead-responder", "Sales lead", 120, 6, "sdr-team"
+                    )
+                ],
+                "confidence": 0.6,
+            },
+        },
+        "expected": {
+            "top_domain": "RACE-A",
+            "binding": {"type": "physical", "domain": "RACE-A"},
+            "opportunities": {"lead-1": {"priority": "defer", "g8": True}},
+        },
+    }
+
+
 if __name__ == "__main__":
     write(race_speed_to_lead())
     write(backend_fulfillment_flood())
@@ -904,4 +1198,7 @@ if __name__ == "__main__":
     write(conflicting_testimony())
     tickets_csv(HERE / "conflicting_testimony" / "helpdesk_events.csv")
     (HERE / "conflicting_testimony" / "interview_ceo.vtt").write_text(INTERVIEW_VTT)
+    write(broken_process_invoicing())
+    write(unowned_system_support())
+    write(reviewer_flood_leads())
     print("cases written")

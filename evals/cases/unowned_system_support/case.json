@@ -1,0 +1,257 @@
+{
+  "id": "unowned_system_support",
+  "title": "Subscription box: support is drowning, nobody owns new tools",
+  "kind": "backend",
+  "traps": [
+    "proposed new system nobody owns (R&D or reshape)",
+    "flashy novel AI idea at the constraint"
+  ],
+  "description": "Support is the constraint. One idea is a novel AI phone agent (no proven pattern), the other a proven ticket triage, but nobody at the client would own either.",
+  "sources": [
+    {
+      "id": "src-helpdesk-2",
+      "kind": "event_log",
+      "title": "Helpdesk export"
+    }
+  ],
+  "resources": [
+    {
+      "id": "support-team",
+      "name": "Support agents",
+      "kind": "team",
+      "count": 3,
+      "hours_per_period": 35,
+      "evidence": [
+        {
+          "id": "ev-1",
+          "source_id": "src-helpdesk-2",
+          "type": "log_data",
+          "locator": "agents"
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "id": "tickets",
+      "name": "Customer tickets",
+      "domain_id": "support",
+      "arrival": {
+        "kind": "poisson",
+        "params": {
+          "rate": 140
+        },
+        "unit": "week"
+      },
+      "evidence": [
+        {
+          "id": "ev-2",
+          "source_id": "src-helpdesk-2",
+          "type": "log_data",
+          "locator": "tickets created"
+        }
+      ]
+    },
+    {
+      "id": "answer",
+      "name": "Answer ticket",
+      "domain_id": "support",
+      "resource_ids": [
+        "support-team"
+      ],
+      "service": {
+        "kind": "lognormal",
+        "params": {
+          "mean": 0.85,
+          "cv": 0.8
+        },
+        "unit": "hour"
+      },
+      "queue_length": 120,
+      "wait_time_h": 90,
+      "evidence": [
+        {
+          "id": "ev-3",
+          "source_id": "src-helpdesk-2",
+          "type": "queue_observation",
+          "locator": "open tickets"
+        }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "source": "tickets",
+      "target": "answer",
+      "probability": 1.0
+    }
+  ],
+  "metrics": [
+    {
+      "id": "frt",
+      "domain_id": "support",
+      "name": "first response",
+      "value": 90,
+      "unit": "h",
+      "period": "2026-10",
+      "measured": true,
+      "source_id": "src-helpdesk-2",
+      "benchmark": 8,
+      "higher_is_better": false
+    }
+  ],
+  "design": {
+    "seeds": [
+      {
+        "id": "sup-1",
+        "parent_id": "opt-x",
+        "kind": "base_action",
+        "statement": "AI phone agent calls back unhappy customers with a cloned voice",
+        "tag": "ai_doable",
+        "focus_step": "exploit",
+        "constraint_link": "acts_on",
+        "effort_days": 3,
+        "assumption": true,
+        "confidence": 0.6
+      },
+      {
+        "id": "sup-2",
+        "parent_id": "opt-x",
+        "kind": "base_action",
+        "statement": "Triage 140 tickets per week and draft replies for the agents",
+        "tag": "ai_assisted",
+        "focus_step": "exploit",
+        "constraint_link": "acts_on",
+        "effort_days": 3,
+        "assumption": true,
+        "confidence": 0.6
+      }
+    ],
+    "analyst": {
+      "judgements": [
+        {
+          "seed_id": "sup-1",
+          "pattern_id": null,
+          "title": "system for sup-1",
+          "ai_role": "assist",
+          "human_in_loop_design": "a person checks every output",
+          "release_gate_design": null,
+          "items_per_week": 0,
+          "review_minutes_per_item": 0,
+          "reviewer_resource_id": null,
+          "output_verification": "spot checks",
+          "cost_of_error": "medium",
+          "client_owner_role": null,
+          "tech_approach": "export + prompt",
+          "build_vs_buy": "build",
+          "scores": {
+            "throughput_impact": {
+              "score": 3,
+              "justification": "scripted for the rule-layer eval"
+            },
+            "feasibility": {
+              "score": 3,
+              "justification": "scripted for the rule-layer eval"
+            },
+            "data_readiness": {
+              "score": 3,
+              "justification": "scripted for the rule-layer eval"
+            },
+            "risk": {
+              "score": 3,
+              "justification": "scripted for the rule-layer eval"
+            },
+            "effort": {
+              "score": 3,
+              "justification": "scripted for the rule-layer eval"
+            },
+            "strategic_fit": {
+              "score": 3,
+              "justification": "scripted for the rule-layer eval"
+            }
+          }
+        },
+        {
+          "seed_id": "sup-2",
+          "pattern_id": "ticket-triage-drafting",
+          "title": "system for sup-2",
+          "ai_role": "assist",
+          "human_in_loop_design": "a person checks every output",
+          "release_gate_design": null,
+          "items_per_week": 0,
+          "review_minutes_per_item": 0,
+          "reviewer_resource_id": null,
+          "output_verification": "spot checks",
+          "cost_of_error": "medium",
+          "client_owner_role": null,
+          "tech_approach": "export + prompt",
+          "build_vs_buy": "build",
+          "scores": {
+            "throughput_impact": {
+              "score": 3,
+              "justification": "scripted for the rule-layer eval"
+            },
+            "feasibility": {
+              "score": 3,
+              "justification": "scripted for the rule-layer eval"
+            },
+            "data_readiness": {
+              "score": 3,
+              "justification": "scripted for the rule-layer eval"
+            },
+            "risk": {
+              "score": 3,
+              "justification": "scripted for the rule-layer eval"
+            },
+            "effort": {
+              "score": 3,
+              "justification": "scripted for the rule-layer eval"
+            },
+            "strategic_fit": {
+              "score": 3,
+              "justification": "scripted for the rule-layer eval"
+            }
+          }
+        }
+      ],
+      "confidence": 0.6
+    }
+  },
+  "expected": {
+    "top_domain": "support",
+    "binding": {
+      "type": "physical",
+      "domain": "support"
+    },
+    "opportunities": {
+      "sup-1": {
+        "priority": "strategic bet",
+        "rd_label": true
+      },
+      "sup-2": {
+        "priority": "defer",
+        "rd_label": false
+      }
+    }
+  },
+  "goal": {
+    "statement": "Make money now and in the future: keep subscribers paying",
+    "unit_of_throughput": "paying customer month",
+    "t_definition": "revenue minus truly variable costs per paying customer month (~80% of price)",
+    "i_definition": "WIP, open orders/quotes, tools",
+    "oe_definition": "payroll, licences, rent, inference",
+    "baseline": {
+      "currency": "EUR",
+      "period": "month"
+    },
+    "horizon": "12 months",
+    "evidence": [
+      {
+        "id": "ev-goal-unowned_system_support",
+        "source_id": "src-helpdesk-2",
+        "type": "interview_claim",
+        "locator": "first call"
+      }
+    ]
+  }
+}

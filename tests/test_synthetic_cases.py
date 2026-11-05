@@ -1,5 +1,6 @@
 """Run every synthetic case end to end and check it against its expected answer (brief §18)."""
 
+import json
 from pathlib import Path
 
 import pytest
@@ -45,3 +46,20 @@ def test_flooding_what_if_on_backend_case():
 def test_cli_eval_cases(capsys):
     assert main(["eval-cases", str(ROOT)]) == 0
     assert "binding accuracy" in capsys.readouterr().out
+
+
+def test_rule_layer_traps_can_fail():
+    """Negative controls: the design checks really test our rules."""
+    case = next(c for c in CASES if c.id == "broken_process_invoicing")
+    healthy = run_case(case.model_copy(update={"process_health": {}}))
+    assert healthy.checks["opp:inv-1:priority"] is False
+    flood = next(c for c in CASES if c.id == "reviewer_flood_leads")
+    design = json.loads(json.dumps(flood.design))
+    design["analyst"]["judgements"][0]["review_minutes_per_item"] = 0
+    calm = run_case(flood.model_copy(update={"design": design}))
+    assert calm.checks["opp:lead-1:g8"] is False
+
+
+def test_rule_layer_traps_present():
+    ids = {c.id for c in CASES if c.design}
+    assert {"broken_process_invoicing", "unowned_system_support", "reviewer_flood_leads"} <= ids

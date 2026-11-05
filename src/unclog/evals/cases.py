@@ -37,6 +37,14 @@ class SyntheticCase(UnclogModel):
     activity_nodes: dict[str, str] = Field(
         default_factory=dict, description="event-log activity -> flow node it waits in front of"
     )
+    process_health: dict[str, str] = Field(
+        default_factory=dict, description="domain/node/resource id -> sound|fragile|broken"
+    )
+    design: dict[str, Any] | None = Field(
+        None,
+        description="scripted design: {seeds: [GoalNode dicts], analyst: AnalystOutput "
+        "dict}; tests the rule layer of opportunity design without a model call",
+    )
     expected: dict[str, Any] = Field(default_factory=dict)
 
     folder: Path | None = Field(None, exclude=True)

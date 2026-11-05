@@ -56,9 +56,40 @@ def run_case(case: SyntheticCase, lang: str = "en") -> CaseResult:
     return res
 
 
+def design_checks(res: CaseResult) -> dict[str, bool]:
+    """Rule layer of opportunity design on a scripted analyst answer (no model call): process
+    health -> fix-process-first, proven-first -> R&D, ownership -> defer, review load -> G8."""
+    from ..agents.opportunity_analyst import AnalystOutput, assemble, make_seeds
+    from ..schemas.design import GoalNode
+    from ..schemas.engagement import ProcessHealth
+
+    case, b = res.case, res.report.binding
+    if case.design is None or b is None:
+        return {}
+    seeds = make_seeds([GoalNode.model_validate(x) for x in case.design["seeds"]], b)
+    out = AnalystOutput.model_validate(case.design["analyst"])
+    health = {k: ProcessHealth(v) for k, v in case.process_health.items()}
+    analysis = assemble(out, seeds, b, case.graph(), res.report.policy_audit.policies, health)
+    opps = {o.goal_node_ids[0]: o for o in analysis.opportunities}
+    checks: dict[str, bool] = {}
+    for seed_id, want in case.expected.get("opportunities", {}).items():
+        o = opps.get(seed_id)
+        if o is None:
+            checks[f"opp:{seed_id}"] = False
+            continue
+        if "priority" in want:
+            checks[f"opp:{seed_id}:priority"] = o.priority.value == want["priority"]
+        if "rd_label" in want:
+            checks[f"opp:{seed_id}:rd"] = o.rd_label is want["rd_label"]
+        if "g8" in want:
+            flagged = any(f.startswith(f"G8 {seed_id}") for f in analysis.findings)
+            checks[f"opp:{seed_id}:g8"] = flagged is want["g8"]
+    return checks
+
+
 def score(res: CaseResult) -> dict[str, bool]:
     exp, heat, rep = res.case.expected, res.heat, res.report
-    checks: dict[str, bool] = {}
+    checks: dict[str, bool] = design_checks(res)
     if "top_domain" in exp:
         top = heat.candidates()[0].domain.value if heat.candidates() else None
         checks["heat_top_domain"] = top == exp["top_domain"]

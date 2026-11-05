@@ -46,3 +46,12 @@ covering the §18 traps for a back-end problem dressed as marketing, a hidden po
 constraint after capacity is fixed, conflicting interview vs log data, no tracking, and a RACE
 bottleneck with a back-end temptation. The traps for broken processes, unowned systems and
 reviewer flooding belong to opportunity design (steps 8–10) and are added there.
+
+**Update (rule-layer traps).** The eval now has 9 cases. Three of them carry a *scripted design*
+(fixed analyst answers) so the eval checks our code's opportunity rules without a model call:
+- `broken_process_invoicing` → fix-process-first. This also checks that it wins over a G8 defer.
+- `unowned_system_support` → the novel idea becomes R&D (strategic bet); the proven one with no
+  owner is deferred.
+- `reviewer_flood_leads` → review at the constraint triggers G8 and a defer.
+
+Negative-control tests show these checks fail when the trap is removed.

@@ -264,13 +264,14 @@ def assemble(
                     f"review pushes {j.reviewer_resource_id} to {after:.0%}: "
                     "creates a new constraint (G8)"
                 )
-                prio, reason = (
-                    Priority.defer,
-                    (
-                        "review load would overload the reviewer; resize review or pick another "
-                        "reviewer (G8)"
-                    ),
-                )
+                if prio not in (Priority.fix_process_first, Priority.do_not_pursue):
+                    prio, reason = (
+                        Priority.defer,
+                        (
+                            "review load would overload the reviewer; resize review or pick "
+                            "another reviewer (G8)"
+                        ),
+                    )
                 analysis.findings.append(f"G8 {j.seed_id}: {side_effects[-1]}")
         risk_ids = []
         for i, r in enumerate(j.risks, 1):
