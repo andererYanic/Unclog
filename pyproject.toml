@@ -9,9 +9,11 @@ dependencies = [
 
 [project.optional-dependencies]
 llm = ["anthropic>=0.70"]
-dev = ["pytest>=8", "ruff>=0.6"]
+ingest = ["openpyxl>=3.1", "pypdf>=4", "python-docx>=1.1"]
+dev = ["pytest>=8", "ruff>=0.6", "openpyxl>=3.1", "pypdf>=4", "python-docx>=1.1"]
 
 [project.scripts]
+unclog = "unclog.cli:main"
 unclog-export-schemas = "unclog.schemas.export:main"
 
 [build-system]
