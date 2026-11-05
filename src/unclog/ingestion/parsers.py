@@ -166,12 +166,91 @@ def parse_pdf(data: bytes, name: str) -> Parsed:
         raise MissingDependency("pdf needs pypdf: pip install unclog[ingest]") from exc
     out = Parsed()
     reader = PdfReader(io.BytesIO(data))
+    empty: list[int] = []
     for i, page in enumerate(reader.pages, start=1):
         t = (page.extract_text() or "").strip()
         if t:
             out.texts.append((f"page {i}", t))
-    if not out.texts:
-        out.warnings.append(f"{name}: no extractable text (scanned PDF? needs OCR)")
+        else:
+            empty.append(i)
+    if empty:
+        if ocr_available():
+            for i, text in ocr_pdf_pages(data, empty):
+                if text:
+                    out.texts.append((f"page {i} (OCR)", text))
+            out.warnings.append(
+                f"{name}: OCR used on page(s) {', '.join(map(str, empty))}; "
+                "check numbers against the original"
+            )
+        else:
+            out.warnings.append(
+                f"{name}: no extractable text on page(s) "
+                f"{', '.join(map(str, empty))} (scanned? install tesseract "
+                "for OCR)"
+            )
+    out.texts.sort(key=lambda x: int(re.search(r"\d+", x[0]).group()))
+    return out
+
+
+def ocr_available() -> bool:
+    """OCR needs pypdfium2 + pytesseract and the tesseract binary; UNCLOG_OCR=0 disables it."""
+    import os
+    import shutil
+
+    if os.environ.get("UNCLOG_OCR", "1") == "0" or shutil.which("tesseract") is None:
+        return False
+    try:
+        import pypdfium2  # noqa: F401
+        import pytesseract  # noqa: F401
+    except ImportError:
+        return False
+    return True
+
+
+def ocr_pdf_pages(data: bytes, pages: list[int], dpi: int = 200) -> list[tuple[int, str]]:
+    import os
+
+    import pypdfium2 as pdfium
+    import pytesseract
+
+    langs = os.environ.get("UNCLOG_OCR_LANGS", "deu+eng")
+    doc = pdfium.PdfDocument(data)
+    out = []
+    for i in pages:
+        image = doc[i - 1].render(scale=dpi / 72).to_pil()
+        out.append((i, pytesseract.image_to_string(image, lang=langs).strip()))
+    return out
+
+
+def parse_pptx(data: bytes, name: str) -> Parsed:
+    try:
+        from pptx import Presentation
+    except ImportError as exc:
+        raise MissingDependency("pptx needs python-pptx: pip install unclog[ingest]") from exc
+    prs = Presentation(io.BytesIO(data))
+    out = Parsed()
+    for n, slide in enumerate(prs.slides, start=1):
+        texts = []
+        for shape in slide.shapes:
+            if shape.has_text_frame:
+                t = "\n".join(p.text for p in shape.text_frame.paragraphs if p.text.strip())
+                if t.strip():
+                    texts.append(t.strip())
+            if getattr(shape, "has_table", False) and shape.has_table:
+                grid = [[c.text.strip() for c in row.cells] for row in shape.table.rows]
+                if len(grid) >= 2:
+                    header = [h or f"col_{i + 1}" for i, h in enumerate(grid[0])]
+                    rows = [
+                        {h: _coerce(r[i]) if i < len(r) else None for i, h in enumerate(header)}
+                        for r in grid[1:]
+                    ]
+                    out.tables.append((f"{Path(name).stem}_slide{n}", f"slide {n}", header, rows))
+        if texts:
+            out.texts.append((f"slide {n}", "\n".join(texts)))
+        if slide.has_notes_slide:
+            notes = slide.notes_slide.notes_text_frame.text.strip()
+            if notes:
+                out.texts.append((f"slide {n} notes", notes))
     return out
 
 
@@ -226,6 +305,7 @@ PARSERS: dict[str, Callable[[bytes, str], Parsed]] = {
     ".srt": parse_transcript,
     ".json": parse_json,
     ".pdf": parse_pdf,
+    ".pptx": parse_pptx,
     ".docx": parse_docx,
     ".eml": parse_eml,
 }

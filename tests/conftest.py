@@ -116,6 +116,6 @@ def upload_dir(tmp_path):
     (d / "refund_sop.docx").write_bytes(make_docx())
     (d / "policy.pdf").write_bytes(make_pdf())
     (d / "mail.eml").write_bytes(make_eml())
-    (d / "deck.pptx").write_bytes(b"not supported yet")
+    (d / "diagram.vsdx").write_bytes(b"not supported yet")
     (d / ".DS_Store").write_bytes(b"")
     return d

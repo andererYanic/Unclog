@@ -9,8 +9,8 @@ from unclog.store import ClientStore
 def test_file_drop_lists_supported_files(upload_dir):
     c = FileDropConnector(upload_dir)
     names = [d.name for d in c.list_datasets()]
-    assert "crm/leads.csv" in names and "deck.pptx" not in names and ".DS_Store" not in names
-    assert c.unsupported() == ["deck.pptx"]
+    assert "crm/leads.csv" in names and "diagram.vsdx" not in names and ".DS_Store" not in names
+    assert c.unsupported() == ["diagram.vsdx"]
 
 
 def test_file_drop_blocks_path_traversal(upload_dir, tmp_path):
@@ -23,7 +23,7 @@ def test_pull_end_to_end(upload_dir, tmp_path):
     store = ClientStore(tmp_path / "clients", "acme")
     report = pull(FileDropConnector(upload_dir), store, actor="intake")
     assert len(report.ingested) == 7 and not report.failed
-    assert report.skipped_unsupported == ["deck.pptx"]
+    assert report.skipped_unsupported == ["diagram.vsdx"]
     assert report.pii_redactions > 0
     assert len(store.list_sources()) == 7
     assert len(list((store.root / "raw").iterdir())) == 7

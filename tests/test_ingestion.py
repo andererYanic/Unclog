@@ -87,8 +87,8 @@ def test_long_text_is_chunked_with_locators():
 
 
 def test_unsupported_format():
-    with pytest.raises(UnsupportedFormat, match=".pptx"):
-        ingest_bytes(b"x", "deck.pptx")
+    with pytest.raises(UnsupportedFormat, match=".vsdx"):
+        ingest_bytes(b"x", "diagram.vsdx")
 
 
 def test_untrusted_wrapper_cannot_be_escaped():
