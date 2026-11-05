@@ -24,6 +24,7 @@ unclog run-system <client> <system> --input record.json   # one run; external ac
 unclog outbox <client> list|show|approve|reject [id]      # human approval of drafts (G13)
 unclog report --case <dir> --out <dir> --lang de [--with-agents]   # deliverables package (drafts for review)
 unclog pipeline --case <dir> --out <dir> [--client-id X] [--with-agents]   # gated, resumable end-to-end run
+unclog review <client> status|approve|request-changes|comment|rerun|go-live|release <target>   # human review (§16)
 ```
 
 ## Status (build plan §19)
@@ -41,4 +42,5 @@ unclog pipeline --case <dir> --out <dir> [--client-id X] [--with-agents]   # gat
 - [x] 12. Build & deploy (provisional defaults, decision 012): 3 proven-pattern templates (decision brief, speed-to-lead drafts, release gate without AI), draft outbox with approval and audit, platform-neutral packaging (SKILL.md, routine, runbook, rollback, handover), G13/G15 checks incl. secret and infrastructure scan
 - [x] 13. Roadmap Planner (waves, DBR by constraint type, KPIs, re-baseline triggers) and Report Writer (bilingual Jinja deliverables, value workbook, risk register, JSON export; all marked draft for review) (decision 013)
 - [x] 14. QA gates G1–G17, Critic, gated and resumable pipeline (checkpointed LLM phases, critic retry-then-escalate, human-review stop); deterministic evidence ids (decision 014)
-- [ ] 15–17. See brief
+- [x] 15. Human review CLI: hash-bound approvals (edits make them stale), change requests, comments, phase re-run, gated go-live (G14/G15; external actions stay drafts unless explicitly allowed), release manifest (decision 015)
+- [ ] 16–17. See brief

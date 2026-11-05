@@ -377,6 +377,54 @@ def cmd_pipeline(args: argparse.Namespace) -> int:
     return 0 if run.status == "awaiting_review" else 1
 
 
+def cmd_review(args: argparse.Namespace) -> int:
+    from pathlib import Path
+
+    from .orchestrator.review import Review
+
+    rv = Review(ClientStore(_root(args), args.client_id))
+    who = args.reviewer
+    if args.action == "status":
+        for st in rv.status(Path(args.target)):
+            by = f" by {st.by}" if st.by else ""
+            print(f"{st.state:<18} {st.name}{by}  comments={st.comments}")
+        return 0
+    if args.action == "approve":
+        rv.approve(Path(args.target), who, args.note or "")
+    elif args.action == "request-changes":
+        rv.request_changes(Path(args.target), who, args.note or "")
+    elif args.action == "comment":
+        rv.comment(args.target, who, args.note or "", args.line)
+    elif args.action == "rerun":
+        print(
+            "dropped checkpoints:", ", ".join(rv.rerun(args.target, who, args.note or "")) or "none"
+        )
+    elif args.action == "release":
+        try:
+            print(rv.release(Path(args.target), who))
+        except PermissionError as exc:
+            print(exc)
+            return 1
+    elif args.action == "go-live":
+        rec, problems = rv.go_live(
+            args.target,
+            who,
+            Path(args.eval_report) if args.eval_report else None,
+            args.owner_trained,
+            args.client_accounts,
+            args.allow_live,
+        )
+        if problems:
+            print("go-live refused:\n" + "\n".join(f"- {p}" for p in problems))
+            return 1
+        print(
+            f"{rec.id} live; approval {rec.go_live_approval_ref}; "
+            f"external actions {'LIVE' if not rec.draft_safe else 'stay drafts'}"
+        )
+    print("ok")
+    return 0
+
+
 def cmd_eval_cases(args: argparse.Namespace) -> int:
     from .evals.runner import MAX_RACE_BACKEND_GAP, run_all
 
@@ -552,6 +600,28 @@ def main(argv: list[str] | None = None) -> int:
     pp.add_argument("--with-agents", action="store_true")
     pp.add_argument("--budget", type=float, default=5.0)
     pp.set_defaults(fn=cmd_pipeline)
+
+    pv = sub.add_parser(
+        "review", help="human review: status/approve/request-changes/comment/rerun/go-live/release"
+    )
+    pv.add_argument("client_id")
+    pv.add_argument(
+        "action",
+        choices=["status", "approve", "request-changes", "comment", "rerun", "go-live", "release"],
+    )
+    pv.add_argument("target", help="deliverable file, package dir, phase or system id")
+    pv.add_argument("--reviewer", default=os.environ.get("USER", ""))
+    pv.add_argument("--note")
+    pv.add_argument("--line", type=int)
+    pv.add_argument("--eval-report")
+    pv.add_argument("--owner-trained", action="store_true")
+    pv.add_argument("--client-accounts", action="store_true")
+    pv.add_argument(
+        "--allow-live",
+        action="store_true",
+        help="let approved systems execute external actions without drafts",
+    )
+    pv.set_defaults(fn=cmd_review)
 
     pm = sub.add_parser("simulate", help="run the standard what-if scenarios on a case")
     pm.add_argument("case_dir")
