@@ -15,6 +15,7 @@ unclog call-plan --lang de [--case <dir>]         # bilingual first-call plan (+
 unclog extract-call <client_id> <source_id>       # transcript -> verified facts + review sheet (needs API access)
 unclog flow-from-log <client_id> <source_id> --domain fulfillment   # measured flow from an event log
 unclog goal-tree --case <dir> --lang de [--mermaid]   # goal-factor the confirmed constraint (needs API access)
+unclog opportunities --case <dir> --lang de          # goal tree + AI opportunity map (needs API access)
 ```
 
 ## Status (build plan §19)
@@ -26,4 +27,5 @@ unclog goal-tree --case <dir> --lang de [--mermaid]   # goal-factor the confirme
 - [x] 6. Simulation: event-driven DES + Monte Carlo (validated vs M/M/1 and static load), batching, Drum-Buffer-Rope gate, customer vs in-shop lead time, standard focusing-step scenarios, simulation-backed relief test (decision 006)
 - [x] 7. Agents for human-led calls (decision 007): bilingual first-call script and tailored call plan; transcript extractor with verbatim-quote verification; flow modeler with graph validation and retries; measured flow from event logs
 - [x] 8. Goal factoring: root goal computed from data, focusing-step skeletons, tree validation, TOC pruning, ranking, opportunity seeds; agent with retries (decision 008)
-- [ ] 9–17. See brief
+- [x] 9. Technique library v1 (17 patterns, honest proven status, no invented uplift); Opportunity Analyst with code-owned position, proven-first, process health, ownership, scoring, priority and review-load (G8) checks (decision 009)
+- [ ] 10–17. See brief

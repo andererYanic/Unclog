@@ -1,0 +1,785 @@
+{
+  "version": "1.0",
+  "updated": "2026-11-05",
+  "note": "proven.status: established (TOC literature / long-standing practice), field-reported (practitioner reports, anecdotal), emerging. typical_uplift is intentionally null until sourced (brief §17).",
+  "patterns": [
+    {
+      "id": "constraint-prestaging",
+      "name": {
+        "en": "Pre-stage complete work for the constraint",
+        "de": "Arbeit für den Engpass vollständig vorbereiten"
+      },
+      "toc_role": "exploit",
+      "ai_role": "assist",
+      "domains": [
+        "*"
+      ],
+      "constraint_types": [
+        "physical",
+        "policy"
+      ],
+      "keywords": [
+        "prepare",
+        "pre-fill",
+        "prefill",
+        "complete",
+        "missing",
+        "kitting",
+        "vorbereiten",
+        "vorausfüllen",
+        "vollständig",
+        "fehlend",
+        "unterlagen"
+      ],
+      "proven": {
+        "status": "established",
+        "references": [
+          "Goldratt, The Goal (core TOC: exploit/subordinate, batch size, DBR)"
+        ]
+      },
+      "typical_uplift": null,
+      "inputs": [
+        "work items",
+        "source documents"
+      ],
+      "outputs": [
+        "completed work package"
+      ],
+      "systems": [
+        "ERP/CRM",
+        "shared drive"
+      ],
+      "external_effect": false
+    },
+    {
+      "id": "quality-gate-before-constraint",
+      "name": {
+        "en": "Screen quality and completeness before the constraint",
+        "de": "Qualität und Vollständigkeit vor dem Engpass prüfen"
+      },
+      "toc_role": "exploit",
+      "ai_role": "gate",
+      "domains": [
+        "*"
+      ],
+      "constraint_types": [
+        "physical",
+        "policy"
+      ],
+      "keywords": [
+        "check",
+        "validate",
+        "screen",
+        "errors",
+        "completeness",
+        "prüfen",
+        "prüfung",
+        "fehler",
+        "plausib",
+        "check"
+      ],
+      "proven": {
+        "status": "established",
+        "references": [
+          "Goldratt, The Goal (core TOC: exploit/subordinate, batch size, DBR)"
+        ]
+      },
+      "typical_uplift": null,
+      "inputs": [
+        "incoming items"
+      ],
+      "outputs": [
+        "pass/fail with reasons"
+      ],
+      "systems": [
+        "ERP/CRM",
+        "ticketing"
+      ],
+      "external_effect": false
+    },
+    {
+      "id": "strip-nonessential",
+      "name": {
+        "en": "Offload non-constraint work from the constraint",
+        "de": "Nebenarbeit vom Engpass wegnehmen"
+      },
+      "toc_role": "exploit",
+      "ai_role": "automate",
+      "domains": [
+        "*"
+      ],
+      "constraint_types": [
+        "physical"
+      ],
+      "keywords": [
+        "admin",
+        "documentation",
+        "emails",
+        "paperwork",
+        "offload",
+        "entlasten",
+        "dokumentation",
+        "verwaltung",
+        "nebenarbeit"
+      ],
+      "proven": {
+        "status": "established",
+        "references": [
+          "Goldratt, The Goal (core TOC: exploit/subordinate, batch size, DBR)"
+        ]
+      },
+      "typical_uplift": null,
+      "inputs": [
+        "routine tasks at the constraint"
+      ],
+      "outputs": [
+        "tasks done elsewhere or automated"
+      ],
+      "systems": [
+        "email",
+        "office suite"
+      ],
+      "external_effect": false
+    },
+    {
+      "id": "decision-brief",
+      "name": {
+        "en": "Decision brief for the approver or expert",
+        "de": "Entscheidungsvorlage für Freigeber oder Experten"
+      },
+      "toc_role": "exploit",
+      "ai_role": "assist",
+      "domains": [
+        "*"
+      ],
+      "constraint_types": [
+        "policy",
+        "physical"
+      ],
+      "keywords": [
+        "decision",
+        "approval",
+        "approve",
+        "sign-off",
+        "summary",
+        "risk",
+        "margin",
+        "freigabe",
+        "entscheidung",
+        "zusammenfassung",
+        "marge",
+        "risiko",
+        "angebots-check",
+        "freigeb",
+        "entscheid"
+      ],
+      "proven": {
+        "status": "field-reported",
+        "references": [
+          "UNCLOG-MASTER-BRIEF §9.3, practitioner field report (anecdotal; uplift not validated)"
+        ]
+      },
+      "typical_uplift": null,
+      "inputs": [
+        "case data",
+        "rules"
+      ],
+      "outputs": [
+        "one-page brief with flags"
+      ],
+      "systems": [
+        "CRM",
+        "document store"
+      ],
+      "external_effect": false
+    },
+    {
+      "id": "throughput-sequencing",
+      "name": {
+        "en": "Sequence work at the constraint by value and due date",
+        "de": "Arbeit am Engpass nach Wert und Termin reihen"
+      },
+      "toc_role": "exploit",
+      "ai_role": "decide",
+      "domains": [
+        "*"
+      ],
+      "constraint_types": [
+        "physical"
+      ],
+      "keywords": [
+        "sequence",
+        "priorit",
+        "order",
+        "schedule",
+        "due date",
+        "reihenfolge",
+        "priorisier",
+        "planung",
+        "termin"
+      ],
+      "proven": {
+        "status": "established",
+        "references": [
+          "Goldratt, The Goal (core TOC: exploit/subordinate, batch size, DBR)"
+        ]
+      },
+      "typical_uplift": null,
+      "inputs": [
+        "queue in front of constraint"
+      ],
+      "outputs": [
+        "ranked work list"
+      ],
+      "systems": [
+        "ERP",
+        "planning tool"
+      ],
+      "external_effect": false
+    },
+    {
+      "id": "speed-to-lead-responder",
+      "name": {
+        "en": "Speed-to-lead responder",
+        "de": "Sofort-Antwort auf neue Anfragen"
+      },
+      "toc_role": "exploit",
+      "ai_role": "automate",
+      "domains": [
+        "RACE-A"
+      ],
+      "constraint_types": [
+        "policy",
+        "market",
+        "physical"
+      ],
+      "keywords": [
+        "lead",
+        "leads",
+        "enquiry",
+        "inquiry",
+        "response",
+        "respond",
+        "reply",
+        "first response",
+        "anfrage",
+        "anfragen",
+        "antwort",
+        "erstreaktion",
+        "rückmeldung"
+      ],
+      "proven": {
+        "status": "field-reported",
+        "references": [
+          "UNCLOG-MASTER-BRIEF §9.3, practitioner field report (anecdotal; uplift not validated)"
+        ]
+      },
+      "typical_uplift": null,
+      "inputs": [
+        "new lead from form/email/CRM"
+      ],
+      "outputs": [
+        "personal first reply + booking link (draft or rule-gated send)"
+      ],
+      "systems": [
+        "CRM",
+        "email",
+        "calendar"
+      ],
+      "external_effect": true
+    },
+    {
+      "id": "follow-up-sequences",
+      "name": {
+        "en": "Follow-up sequences for open deals",
+        "de": "Nachfass-Sequenzen für offene Angebote"
+      },
+      "toc_role": "exploit",
+      "ai_role": "assist",
+      "domains": [
+        "RACE-C"
+      ],
+      "constraint_types": [
+        "market",
+        "policy"
+      ],
+      "keywords": [
+        "follow-up",
+        "follow up",
+        "proposal",
+        "quote",
+        "reminder",
+        "nachfassen",
+        "angebot",
+        "erinnerung"
+      ],
+      "proven": {
+        "status": "field-reported",
+        "references": [
+          "UNCLOG-MASTER-BRIEF §9.3, practitioner field report (anecdotal; uplift not validated)"
+        ]
+      },
+      "typical_uplift": null,
+      "inputs": [
+        "open deals/quotes"
+      ],
+      "outputs": [
+        "drafted follow-ups for rep approval"
+      ],
+      "systems": [
+        "CRM",
+        "email"
+      ],
+      "external_effect": true
+    },
+    {
+      "id": "call-script-overlay",
+      "name": {
+        "en": "Sales call script and SOP overlay",
+        "de": "Gesprächsleitfaden und SOP für Verkaufsgespräche"
+      },
+      "toc_role": "exploit",
+      "ai_role": "assist",
+      "domains": [
+        "RACE-C"
+      ],
+      "constraint_types": [
+        "market"
+      ],
+      "keywords": [
+        "call",
+        "script",
+        "objection",
+        "discovery",
+        "gespräch",
+        "leitfaden",
+        "einwand"
+      ],
+      "proven": {
+        "status": "field-reported",
+        "references": [
+          "UNCLOG-MASTER-BRIEF §9.3, practitioner field report (anecdotal; uplift not validated)"
+        ]
+      },
+      "typical_uplift": null,
+      "inputs": [
+        "call notes, past wins"
+      ],
+      "outputs": [
+        "call guide per deal"
+      ],
+      "systems": [
+        "CRM",
+        "call recorder"
+      ],
+      "external_effect": false
+    },
+    {
+      "id": "ad-creative-variant-factory",
+      "name": {
+        "en": "Ad creative variant factory (paused ads)",
+        "de": "Werbemittel-Varianten (pausiert angelegt)"
+      },
+      "toc_role": "elevate",
+      "ai_role": "automate",
+      "domains": [
+        "RACE-R"
+      ],
+      "constraint_types": [
+        "market"
+      ],
+      "keywords": [
+        "ad",
+        "ads",
+        "creative",
+        "variant",
+        "hook",
+        "headline",
+        "campaign",
+        "anzeige",
+        "werbung",
+        "kampagne",
+        "variante"
+      ],
+      "proven": {
+        "status": "field-reported",
+        "references": [
+          "UNCLOG-MASTER-BRIEF §9.3, practitioner field report (anecdotal; uplift not validated)"
+        ]
+      },
+      "typical_uplift": null,
+      "inputs": [
+        "90-day ad report"
+      ],
+      "outputs": [
+        "paused ad variants + change summary"
+      ],
+      "systems": [
+        "Meta Ads",
+        "Google Ads"
+      ],
+      "external_effect": true
+    },
+    {
+      "id": "ticket-triage-drafting",
+      "name": {
+        "en": "Ticket triage and reply drafting",
+        "de": "Ticket-Vorsortierung und Antwortentwürfe"
+      },
+      "toc_role": "exploit",
+      "ai_role": "assist",
+      "domains": [
+        "support"
+      ],
+      "constraint_types": [
+        "physical",
+        "policy"
+      ],
+      "keywords": [
+        "ticket",
+        "tickets",
+        "triage",
+        "support",
+        "reply",
+        "draft",
+        "antwort",
+        "entwurf",
+        "anfrage",
+        "kundendienst"
+      ],
+      "proven": {
+        "status": "field-reported",
+        "references": [
+          "UNCLOG-MASTER-BRIEF §9.3, practitioner field report (anecdotal; uplift not validated)"
+        ]
+      },
+      "typical_uplift": null,
+      "inputs": [
+        "incoming tickets"
+      ],
+      "outputs": [
+        "category, priority, drafted reply for agent"
+      ],
+      "systems": [
+        "helpdesk"
+      ],
+      "external_effect": false
+    },
+    {
+      "id": "release-gate-wip-limit",
+      "name": {
+        "en": "Release gate / WIP limit (rope)",
+        "de": "Freigabe-Tor / WIP-Limit (Seil)"
+      },
+      "toc_role": "subordinate",
+      "ai_role": "gate",
+      "domains": [
+        "*"
+      ],
+      "constraint_types": [
+        "physical"
+      ],
+      "keywords": [
+        "wip",
+        "rope",
+        "release",
+        "limit",
+        "gate",
+        "pace",
+        "takt",
+        "seil",
+        "begrenzen",
+        "annahme"
+      ],
+      "proven": {
+        "status": "established",
+        "references": [
+          "Goldratt, The Goal (core TOC: exploit/subordinate, batch size, DBR)"
+        ]
+      },
+      "typical_uplift": null,
+      "inputs": [
+        "new work requests"
+      ],
+      "outputs": [
+        "release decisions paced to the drum"
+      ],
+      "systems": [
+        "ERP/CRM"
+      ],
+      "external_effect": false
+    },
+    {
+      "id": "batch-reduction",
+      "name": {
+        "en": "Smaller transfer batches",
+        "de": "Kleinere Weitergabe-Mengen"
+      },
+      "toc_role": "subordinate",
+      "ai_role": "none",
+      "domains": [
+        "*"
+      ],
+      "constraint_types": [
+        "policy",
+        "physical"
+      ],
+      "keywords": [
+        "batch",
+        "batches",
+        "daily",
+        "continuously",
+        "weekly",
+        "täglich",
+        "laufend",
+        "gesammelt",
+        "wöchentlich"
+      ],
+      "proven": {
+        "status": "established",
+        "references": [
+          "Goldratt, The Goal (core TOC: exploit/subordinate, batch size, DBR)"
+        ]
+      },
+      "typical_uplift": null,
+      "inputs": [
+        "batching rule"
+      ],
+      "outputs": [
+        "smaller/continuous release"
+      ],
+      "systems": [],
+      "external_effect": false
+    },
+    {
+      "id": "buffer-monitoring",
+      "name": {
+        "en": "Buffer monitoring and alerts",
+        "de": "Puffer-Überwachung und Warnungen"
+      },
+      "toc_role": "subordinate",
+      "ai_role": "monitor",
+      "domains": [
+        "*"
+      ],
+      "constraint_types": [
+        "physical"
+      ],
+      "keywords": [
+        "buffer",
+        "alert",
+        "overdue",
+        "late",
+        "monitor",
+        "puffer",
+        "warnung",
+        "verspätet",
+        "überfällig"
+      ],
+      "proven": {
+        "status": "established",
+        "references": [
+          "Goldratt, later works (buffer management) [later-TOC]"
+        ]
+      },
+      "typical_uplift": null,
+      "inputs": [
+        "order status, due dates"
+      ],
+      "outputs": [
+        "green/yellow/red alerts"
+      ],
+      "systems": [
+        "ERP",
+        "dashboard"
+      ],
+      "external_effect": false
+    },
+    {
+      "id": "expert-copilot",
+      "name": {
+        "en": "Expert copilot at the constraint",
+        "de": "KI-Assistent für Experten am Engpass"
+      },
+      "toc_role": "elevate",
+      "ai_role": "augment",
+      "domains": [
+        "*"
+      ],
+      "constraint_types": [
+        "physical"
+      ],
+      "keywords": [
+        "copilot",
+        "assistant",
+        "draft",
+        "estimate",
+        "faster",
+        "design",
+        "entwurf",
+        "kalkulation",
+        "schneller",
+        "assistent"
+      ],
+      "proven": {
+        "status": "field-reported",
+        "references": [
+          "UNCLOG-MASTER-BRIEF §9.3, practitioner field report (anecdotal; uplift not validated)"
+        ]
+      },
+      "typical_uplift": null,
+      "inputs": [
+        "expert's task inputs"
+      ],
+      "outputs": [
+        "first draft the expert edits"
+      ],
+      "systems": [
+        "domain tools"
+      ],
+      "external_effect": false
+    },
+    {
+      "id": "tiered-delegation",
+      "name": {
+        "en": "Tiered delegation within thresholds",
+        "de": "Gestufte Delegation mit Schwellen"
+      },
+      "toc_role": "elevate",
+      "ai_role": "decide",
+      "domains": [
+        "*"
+      ],
+      "constraint_types": [
+        "policy",
+        "physical"
+      ],
+      "keywords": [
+        "delegate",
+        "threshold",
+        "limit",
+        "tier",
+        "authority",
+        "delegieren",
+        "schwelle",
+        "grenze",
+        "befugnis",
+        "freigabegrenze",
+        "freigeb",
+        "darf bis",
+        "risikostufe",
+        "risk tier",
+        "route"
+      ],
+      "proven": {
+        "status": "established",
+        "references": [
+          "Goldratt, The Goal (core TOC: exploit/subordinate, batch size, DBR)"
+        ]
+      },
+      "typical_uplift": null,
+      "inputs": [
+        "decision rules, thresholds"
+      ],
+      "outputs": [
+        "decisions routed by risk tier"
+      ],
+      "systems": [
+        "CRM/ERP workflow"
+      ],
+      "external_effect": false
+    },
+    {
+      "id": "report-generator",
+      "name": {
+        "en": "Automated status reports",
+        "de": "Automatische Statusberichte"
+      },
+      "toc_role": "exploit",
+      "ai_role": "automate",
+      "domains": [
+        "it",
+        "mgmt",
+        "finance"
+      ],
+      "constraint_types": [
+        "physical",
+        "policy"
+      ],
+      "keywords": [
+        "report",
+        "reporting",
+        "status",
+        "dashboard",
+        "bericht",
+        "auswertung",
+        "übersicht"
+      ],
+      "proven": {
+        "status": "field-reported",
+        "references": [
+          "UNCLOG-MASTER-BRIEF §9.3, practitioner field report (anecdotal; uplift not validated)"
+        ]
+      },
+      "typical_uplift": null,
+      "inputs": [
+        "system exports"
+      ],
+      "outputs": [
+        "scheduled report"
+      ],
+      "systems": [
+        "BI",
+        "spreadsheet"
+      ],
+      "external_effect": false
+    },
+    {
+      "id": "data-sync-job",
+      "name": {
+        "en": "Data sync between systems",
+        "de": "Datenabgleich zwischen Systemen"
+      },
+      "toc_role": "exploit",
+      "ai_role": "automate",
+      "domains": [
+        "it",
+        "finance",
+        "fulfillment"
+      ],
+      "constraint_types": [
+        "physical"
+      ],
+      "keywords": [
+        "sync",
+        "manual entry",
+        "re-key",
+        "copy",
+        "export",
+        "import",
+        "abtippen",
+        "übertragen",
+        "schnittstelle"
+      ],
+      "proven": {
+        "status": "field-reported",
+        "references": [
+          "UNCLOG-MASTER-BRIEF §9.3, practitioner field report (anecdotal; uplift not validated)"
+        ]
+      },
+      "typical_uplift": null,
+      "inputs": [
+        "source system records"
+      ],
+      "outputs": [
+        "records in target system"
+      ],
+      "systems": [
+        "CRM",
+        "ERP",
+        "accounting"
+      ],
+      "external_effect": false
+    }
+  ]
+}

@@ -136,6 +136,32 @@ def cmd_goal_tree(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_opportunities(args: argparse.Namespace) -> int:
+    from .agents.goal_factoring import factor_goal
+    from .agents.opportunity_analyst import analyse_opportunities, to_markdown
+    from .evals.cases import load_case
+    from .evals.runner import run_case
+
+    case = load_case(args.case)
+    res = run_case(case)
+    b = res.report.binding
+    if b is None:
+        print("No confirmed constraint: only discovery actions are allowed (G4).")
+        return 1
+    llm = make_llm(args.budget)
+    pols = res.report.policy_audit.policies
+    tree = factor_goal(llm, b, case.graph(), case.metrics, pols, lang=args.lang).result
+    seeds = tree.opportunity_seeds()
+    print(tree.to_markdown(args.lang))
+    if not seeds:
+        print("\nNo AI-doable actions on the constraint: the plan is non-AI fixes only.")
+        return 0
+    run = analyse_opportunities(llm, seeds, b, case.graph(), pols, lang=args.lang)
+    print("\n" + to_markdown(run.result, args.lang))
+    print(f"\ntotal model cost ${llm.cost.total_usd:.4f}")
+    return 0
+
+
 def cmd_eval_cases(args: argparse.Namespace) -> int:
     from .evals.runner import MAX_RACE_BACKEND_GAP, run_all
 
@@ -221,6 +247,12 @@ def main(argv: list[str] | None = None) -> int:
     pg.add_argument("--mermaid", action="store_true")
     pg.add_argument("--budget", type=float, default=2.0)
     pg.set_defaults(fn=cmd_goal_tree)
+
+    po = sub.add_parser("opportunities", help="goal tree + opportunity map for a case")
+    po.add_argument("--case", required=True)
+    po.add_argument("--lang", choices=["de", "en"], default="de")
+    po.add_argument("--budget", type=float, default=3.0)
+    po.set_defaults(fn=cmd_opportunities)
 
     pm = sub.add_parser("simulate", help="run the standard what-if scenarios on a case")
     pm.add_argument("case_dir")

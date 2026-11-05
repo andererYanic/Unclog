@@ -219,6 +219,10 @@ class Opportunity(Grounded):
     release_gate_required: bool = False
     release_gate_design: str | None = None
     human_in_loop_design: str | None = None
+    review_load_h_per_week: float | None = Field(
+        None, ge=0, description="human review time this system adds (G8: size review capacity)"
+    )
+    reviewer_resource_id: Id | None = None
     tech_approach: str | None = None
     build_vs_buy: str | None = None
     risk_ids: list[Id] = Field(default_factory=list)
