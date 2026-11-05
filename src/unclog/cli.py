@@ -230,6 +230,87 @@ def cmd_eval_rate(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_package(args: argparse.Namespace) -> int:
+    from .build.templates import TEMPLATES
+    from .deploy import PackageSpec, package
+
+    store = ClientStore(_root(args), args.client_id)
+    spec = PackageSpec(
+        client_id=args.client_id,
+        system_id=args.system_id,
+        template=TEMPLATES[args.template],
+        opportunity_id=args.opportunity,
+        client_owner=args.owner,
+        environment=args.environment,
+        schedule=args.schedule,
+        trigger=args.trigger,
+        connectors=args.connector or [],
+        credential_env=args.credential_env or [],
+        config=json.loads(open(args.config).read()) if args.config else {},
+        version=args.version,
+        lang=args.lang,
+        eval_report=args.eval_report,
+        owner_trained=args.owner_trained,
+        client_owned_accounts=args.client_accounts,
+    )
+    system, folder, issues = package(spec, store, actor=args.actor)
+    print(f"packaged {system.id} v{system.version} -> {folder}")
+    status = "go-live ready" if not issues else "not_live"
+    print(f"status: {status}" + "".join(f"\n- {i}" for i in issues))
+    return 0
+
+
+def cmd_run_system(args: argparse.Namespace) -> int:
+    from datetime import UTC, datetime
+    from pathlib import Path
+
+    from .build.templates import TEMPLATES
+    from .deploy import Outbox
+
+    store = ClientStore(_root(args), args.client_id)
+    base = Path(store.root) / "systems" / args.system_id
+    folder = sorted(base.glob("v*"))[-1]
+    routine = json.loads((folder / "routine.json").read_text())
+    config = json.loads((folder / "config.json").read_text())
+    tpl = TEMPLATES[routine["template"]]
+    record = json.loads(Path(args.input).read_text())
+    llm = make_llm(args.budget) if tpl.uses_ai else None
+    out = tpl.run(record, config, llm=llm, lang=args.lang)
+    run_dir = folder / "runs" / datetime.now(UTC).strftime("%Y%m%dT%H%M%S%f")
+    run_dir.mkdir(parents=True)
+    for name, text in out.artifacts.items():
+        (run_dir / Path(name).name).write_text(text)
+    box = Outbox(store)
+    for a in out.actions:
+        item = box.put(args.system_id, a, actor=f"system:{args.system_id}")
+        print(f"draft in outbox: {item.id} ({a.operation}) — {a.change_summary}")
+    print(f"{out.change_summary}\nartifacts: {run_dir}")
+    return 0
+
+
+def cmd_outbox(args: argparse.Namespace) -> int:
+    from .deploy import Outbox
+
+    box = Outbox(ClientStore(_root(args), args.client_id))
+    if args.action == "list":
+        for i in box.list(args.status):
+            print(
+                f"{i.id}  {i.status:<9} {i.system_id:<24} {i.action.operation:<12} "
+                f"{i.action.change_summary}"
+            )
+        return 0
+    if not args.item:
+        print("item id required")
+        return 2
+    if args.action == "show":
+        print(box.get(args.item).model_dump_json(indent=2))
+    elif args.action == "approve":
+        print(box.approve(args.item, args.actor, args.reason).status)
+    elif args.action == "reject":
+        print(box.reject(args.item, args.actor, args.reason or "rejected").status)
+    return 0
+
+
 def cmd_eval_cases(args: argparse.Namespace) -> int:
     from .evals.runner import MAX_RACE_BACKEND_GAP, run_all
 
@@ -346,6 +427,47 @@ def main(argv: list[str] | None = None) -> int:
     prt.add_argument("report")
     prt.add_argument("--limit", type=int)
     prt.set_defaults(fn=cmd_eval_rate)
+
+    pk = sub.add_parser("package", help="package a system for the client (skill, routine, runbook)")
+    pk.add_argument("client_id")
+    pk.add_argument("system_id")
+    pk.add_argument(
+        "--template",
+        required=True,
+        choices=["decision-brief", "speed-to-lead-responder", "release-gate-wip-limit"],
+    )
+    pk.add_argument("--opportunity", required=True)
+    pk.add_argument("--owner", required=True)
+    pk.add_argument("--environment", default="client AI workspace")
+    pk.add_argument("--schedule")
+    pk.add_argument("--trigger")
+    pk.add_argument("--connector", action="append")
+    pk.add_argument("--credential-env", action="append", help="env var NAME in client vault")
+    pk.add_argument("--config", help="JSON file with template config")
+    pk.add_argument("--version", default="1.0.0")
+    pk.add_argument("--lang", choices=["de", "en"], default="de")
+    pk.add_argument("--eval-report")
+    pk.add_argument("--owner-trained", action="store_true")
+    pk.add_argument("--client-accounts", action="store_true")
+    pk.add_argument("--actor", default="deployment_agent")
+    pk.set_defaults(fn=cmd_package)
+
+    pr = sub.add_parser("run-system", help="run a packaged system once on an input record")
+    pr.add_argument("client_id")
+    pr.add_argument("system_id")
+    pr.add_argument("--input", required=True)
+    pr.add_argument("--lang", choices=["de", "en"], default="de")
+    pr.add_argument("--budget", type=float, default=1.0)
+    pr.set_defaults(fn=cmd_run_system)
+
+    pb = sub.add_parser("outbox", help="review drafts: list/show/approve/reject")
+    pb.add_argument("client_id")
+    pb.add_argument("action", choices=["list", "show", "approve", "reject"])
+    pb.add_argument("item", nargs="?")
+    pb.add_argument("--status", choices=["pending", "approved", "rejected", "executed", "failed"])
+    pb.add_argument("--reason")
+    pb.add_argument("--actor", default=os.environ.get("USER", "reviewer"))
+    pb.set_defaults(fn=cmd_outbox)
 
     pm = sub.add_parser("simulate", help="run the standard what-if scenarios on a case")
     pm.add_argument("case_dir")

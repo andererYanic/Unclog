@@ -1,3 +1,6 @@
-"""Skill packaging, routines, schedules, handover (brief §9.4).
+"""Skill packaging, routines, draft outbox, handover (brief §9.4; decision 012)."""
 
-Not yet implemented; see build plan (brief §19)."""
+from .outbox import Outbox, OutboxItem
+from .package import PackageSpec, check_g13, check_g15, package
+
+__all__ = ["Outbox", "OutboxItem", "PackageSpec", "check_g13", "check_g15", "package"]

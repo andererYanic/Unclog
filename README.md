@@ -19,6 +19,9 @@ unclog opportunities --case <dir> --lang de          # goal tree + AI opportunit
 unclog eval-agent goal_factoring --n 10 [--judge] [--model M]   # N-run eval + G14 gate (needs API access)
 unclog eval-compare <baseline.json> <candidate.json> --change "prompt v2"   # hill-climb decision
 unclog eval-rate <report.json>                    # human ratings 1-10
+unclog package <client> <system> --template decision-brief --opportunity opp-x --owner "..."   # client-owned bundle
+unclog run-system <client> <system> --input record.json   # one run; external actions land as drafts
+unclog outbox <client> list|show|approve|reject [id]      # human approval of drafts (G13)
 ```
 
 ## Status (build plan §19)
@@ -33,4 +36,5 @@ unclog eval-rate <report.json>                    # human ratings 1-10
 - [x] 9. Technique library v1 (17 patterns, honest proven status, no invented uplift); Opportunity Analyst with code-owned position, proven-first, process health, ownership, scoring, priority and review-load (G8) checks (decision 009)
 - [x] 10. Value model: T/I/OE with simulated ΔT (noise-tested), realization-path ΔOE, mirage ledger, carrying cost, run/build costs, portfolio de-duplication, adoption ramp; feasibility checklist with compliance flags (decision 010)
 - [x] 11. Eval harness: N-run distributions (mean, variance, worst case, failure modes), code graders + optional LLM judge, hill-climb rule (mean up, worst case not down) with decision log, G14 gate, human rating CLI, model override (decision 011)
-- [ ] 12–17. See brief
+- [x] 12. Build & deploy (provisional defaults, decision 012): 3 proven-pattern templates (decision brief, speed-to-lead drafts, release gate without AI), draft outbox with approval and audit, platform-neutral packaging (SKILL.md, routine, runbook, rollback, handover), G13/G15 checks incl. secret and infrastructure scan
+- [ ] 13–17. See brief
