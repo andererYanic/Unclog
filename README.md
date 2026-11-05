@@ -15,4 +15,5 @@ unclog sources <client_id>
 - [x] 1. Scaffold, CI, `llm/` wrapper (retries, structured outputs + validation retry, prompt + response caching, cost tracking, budgets)
 - [x] 2. Schemas (§13) with evidence enforcement and invariants for G4, G5, G12, G13, G14 and privacy
 - [x] 3. Per-client store (versioned, agent-owned artifacts, audit log, delete command); file ingestion (csv/tsv, xlsx, pdf, docx, txt/md, vtt/srt, json, eml) with PII scrubbing and event-log detection; connector interface with file uploads as route 1 (decision 003)
-- [ ] 4–17. See brief
+- [x] 4. Flow graph (offered load incl. funnels/rework, load/capacity, wait estimates, what-if scaling), event-log statistics, RACE + back-end heat table with both-direction check and G5 coverage; 3 synthetic cases in `evals/cases/` (decision 004)
+- [ ] 5–17. See brief

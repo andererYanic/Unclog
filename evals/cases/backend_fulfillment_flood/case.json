@@ -1,0 +1,271 @@
+{
+  "id": "backend_fulfillment_flood",
+  "title": "Custom furniture shop: 'we need more sales'",
+  "kind": "backend",
+  "traps": [
+    "back-end bottleneck dressed as a marketing problem",
+    "more leads must be rejected (flooding)"
+  ],
+  "description": "Owner asks for better ads. Conversion is a bit below benchmark (owner's estimate), but the workshop gets ~22 orders/week against capacity for ~19; 64 orders wait and 'where is my order' emails pile up in support.",
+  "sources": [
+    {
+      "id": "src-erp-orders",
+      "kind": "event_log",
+      "title": "Shop/ERP order status history"
+    },
+    {
+      "id": "src-ads-export",
+      "kind": "export",
+      "title": "Meta Ads + Shopify funnel export"
+    },
+    {
+      "id": "src-intv-owner",
+      "kind": "interview",
+      "title": "First call with owner"
+    }
+  ],
+  "resources": [
+    {
+      "id": "workshop",
+      "name": "4 carpenters",
+      "kind": "team",
+      "count": 4,
+      "hours_per_period": 38,
+      "evidence": [
+        {
+          "id": "ev-1",
+          "source_id": "src-erp-orders",
+          "type": "log_data",
+          "locator": "production timestamps"
+        },
+        {
+          "id": "ev-2",
+          "source_id": "src-intv-owner",
+          "type": "interview_claim",
+          "locator": "t=00:21:30",
+          "quote": "The guys in the workshop are working Saturdays and still behind."
+        }
+      ]
+    },
+    {
+      "id": "designer",
+      "name": "Designer",
+      "kind": "person",
+      "count": 1,
+      "hours_per_period": 40,
+      "evidence": [
+        {
+          "id": "ev-3",
+          "source_id": "src-erp-orders",
+          "type": "log_data",
+          "locator": "design approvals"
+        }
+      ]
+    },
+    {
+      "id": "marketing",
+      "name": "Marketing freelancer",
+      "kind": "person",
+      "count": 1,
+      "hours_per_period": 10,
+      "evidence": [
+        {
+          "id": "ev-4",
+          "source_id": "src-ads-export",
+          "type": "document",
+          "locator": "contract"
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "id": "visitors",
+      "name": "Shop visitors",
+      "domain_id": "RACE-R",
+      "arrival": {
+        "kind": "poisson",
+        "params": {
+          "rate": 2000
+        },
+        "unit": "week"
+      },
+      "evidence": [
+        {
+          "id": "ev-5",
+          "source_id": "src-ads-export",
+          "type": "log_data",
+          "locator": "sessions"
+        }
+      ]
+    },
+    {
+      "id": "checkout",
+      "name": "Configurator + checkout",
+      "domain_id": "RACE-C",
+      "evidence": [
+        {
+          "id": "ev-6",
+          "source_id": "src-ads-export",
+          "type": "log_data",
+          "locator": "orders / sessions"
+        }
+      ]
+    },
+    {
+      "id": "design",
+      "name": "Design approval",
+      "domain_id": "fulfillment",
+      "resource_ids": [
+        "designer"
+      ],
+      "service": {
+        "kind": "gamma",
+        "params": {
+          "shape": 3,
+          "scale": 0.5
+        },
+        "unit": "hour"
+      },
+      "evidence": [
+        {
+          "id": "ev-7",
+          "source_id": "src-erp-orders",
+          "type": "log_data",
+          "locator": "design_approved"
+        }
+      ]
+    },
+    {
+      "id": "production",
+      "name": "Workshop production",
+      "domain_id": "fulfillment",
+      "resource_ids": [
+        "workshop"
+      ],
+      "service": {
+        "kind": "lognormal",
+        "params": {
+          "mean": 8,
+          "cv": 0.35
+        },
+        "unit": "hour"
+      },
+      "queue_length": 64,
+      "evidence": [
+        {
+          "id": "ev-8",
+          "source_id": "src-erp-orders",
+          "type": "queue_observation",
+          "locator": "open orders without production_start"
+        },
+        {
+          "id": "ev-9",
+          "source_id": "src-erp-orders",
+          "type": "log_data",
+          "locator": "production timestamps"
+        }
+      ]
+    },
+    {
+      "id": "shipping",
+      "name": "Shipping",
+      "domain_id": "fulfillment",
+      "evidence": [
+        {
+          "id": "ev-10",
+          "source_id": "src-erp-orders",
+          "type": "log_data",
+          "locator": "shipped"
+        }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "source": "visitors",
+      "target": "checkout",
+      "probability": 0.011
+    },
+    {
+      "source": "checkout",
+      "target": "design",
+      "probability": 1.0
+    },
+    {
+      "source": "design",
+      "target": "production",
+      "probability": 1.0
+    },
+    {
+      "source": "production",
+      "target": "shipping",
+      "probability": 1.0
+    }
+  ],
+  "metrics": [
+    {
+      "id": "reach-sessions",
+      "domain_id": "RACE-R",
+      "name": "shop sessions",
+      "value": 2000,
+      "unit": "sessions/week",
+      "period": "2026-10",
+      "measured": true,
+      "source_id": "src-ads-export"
+    },
+    {
+      "id": "conv-rate",
+      "domain_id": "RACE-C",
+      "name": "visitor -> order (owner's estimate)",
+      "value": 0.011,
+      "unit": "ratio",
+      "period": "2026-10",
+      "measured": false,
+      "benchmark": 0.015,
+      "higher_is_better": true
+    },
+    {
+      "id": "exp-repeat",
+      "domain_id": "RACE-E",
+      "name": "repeat purchase rate",
+      "value": 0.08,
+      "unit": "ratio",
+      "period": "2026-10",
+      "measured": true,
+      "source_id": "src-erp-orders"
+    },
+    {
+      "id": "ful-leadtime-promise",
+      "domain_id": "fulfillment",
+      "name": "promised delivery",
+      "value": 3,
+      "unit": "weeks",
+      "period": "2026-10",
+      "measured": false
+    },
+    {
+      "id": "sup-tickets",
+      "domain_id": "support",
+      "name": "'where is my order' emails",
+      "value": 41,
+      "unit": "per week",
+      "period": "2026-10",
+      "measured": false,
+      "benchmark": 10,
+      "higher_is_better": false
+    }
+  ],
+  "raw_files": [
+    "orders_events.csv"
+  ],
+  "expected": {
+    "top_domain": "fulfillment",
+    "direction": "capacity_limited",
+    "must_rank_below_top": [
+      "RACE-C",
+      "RACE-R"
+    ],
+    "eventlog_slowest_wait": "production_start"
+  }
+}

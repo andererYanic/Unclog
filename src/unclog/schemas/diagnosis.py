@@ -54,6 +54,9 @@ class StageMetric(UnclogModel):
     period: str
     benchmark: float | None = None
     benchmark_source_id: Id | None = None
+    higher_is_better: bool | None = Field(
+        None, description="direction for benchmark gaps; None = not comparable"
+    )
     source_id: Id | None = None
     measured: bool = Field(description="True = from data/logs; False = interview estimate")
 

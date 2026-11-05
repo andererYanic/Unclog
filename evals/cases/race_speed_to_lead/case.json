@@ -1,0 +1,455 @@
+{
+  "id": "race_speed_to_lead",
+  "title": "B2B consultancy: leads answered in 52 h",
+  "kind": "race",
+  "traps": [
+    "impressive back-end automation temptation (invoice OCR)",
+    "batching policy causes the wait, not SDR capacity"
+  ],
+  "description": "455 leads/month, but SDRs work new leads in two weekly batches, so the median first response is 52 h and only 9% book a meeting. Delivery and finance have ample capacity; an invoice-automation idea is a non-constraint temptation.",
+  "sources": [
+    {
+      "id": "src-crm-export",
+      "kind": "export",
+      "title": "HubSpot deals + activity export Q3-Q4"
+    },
+    {
+      "id": "src-finance-export",
+      "kind": "export",
+      "title": "DATEV invoices export"
+    },
+    {
+      "id": "src-intv-ceo",
+      "kind": "interview",
+      "title": "First call with CEO"
+    },
+    {
+      "id": "src-bench",
+      "kind": "web",
+      "title": "Industry funnel benchmarks (illustrative)"
+    }
+  ],
+  "resources": [
+    {
+      "id": "sdr-team",
+      "name": "2 SDRs",
+      "kind": "team",
+      "count": 2,
+      "hours_per_period": 32,
+      "evidence": [
+        {
+          "id": "ev-1",
+          "source_id": "src-crm-export",
+          "type": "document",
+          "locator": "org chart"
+        }
+      ]
+    },
+    {
+      "id": "account-execs",
+      "name": "3 AEs",
+      "kind": "team",
+      "count": 3,
+      "hours_per_period": 30,
+      "evidence": [
+        {
+          "id": "ev-2",
+          "source_id": "src-crm-export",
+          "type": "document",
+          "locator": "org chart"
+        }
+      ]
+    },
+    {
+      "id": "consultants",
+      "name": "Delivery consultants",
+      "kind": "team",
+      "count": 6,
+      "hours_per_period": 32,
+      "evidence": [
+        {
+          "id": "ev-3",
+          "source_id": "src-crm-export",
+          "type": "document",
+          "locator": "org chart"
+        }
+      ]
+    },
+    {
+      "id": "bookkeeper",
+      "name": "Bookkeeper",
+      "kind": "person",
+      "count": 1,
+      "hours_per_period": 20,
+      "evidence": [
+        {
+          "id": "ev-4",
+          "source_id": "src-finance-export",
+          "type": "document",
+          "locator": "org chart"
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "id": "inbound-lead",
+      "name": "Inbound lead",
+      "domain_id": "RACE-R",
+      "arrival": {
+        "kind": "poisson",
+        "params": {
+          "rate": 455
+        },
+        "unit": "month"
+      },
+      "evidence": [
+        {
+          "id": "ev-5",
+          "source_id": "src-crm-export",
+          "type": "log_data",
+          "locator": "contacts created Jul-Oct"
+        }
+      ]
+    },
+    {
+      "id": "first-response",
+      "name": "First response + qualification",
+      "domain_id": "RACE-A",
+      "resource_ids": [
+        "sdr-team"
+      ],
+      "service": {
+        "kind": "lognormal",
+        "params": {
+          "mean": 0.4,
+          "cv": 0.6
+        },
+        "unit": "hour"
+      },
+      "wait_time_h": 52,
+      "batch_size": 25,
+      "evidence": [
+        {
+          "id": "ev-6",
+          "source_id": "src-crm-export",
+          "type": "log_data",
+          "locator": "first activity timestamp - create date"
+        },
+        {
+          "id": "ev-7",
+          "source_id": "src-intv-ceo",
+          "type": "interview_claim",
+          "locator": "t=00:14:10",
+          "quote": "We go through the new leads in one block on Monday and Thursday."
+        }
+      ]
+    },
+    {
+      "id": "discovery-meeting",
+      "name": "Discovery meeting",
+      "domain_id": "RACE-C",
+      "resource_ids": [
+        "account-execs"
+      ],
+      "service": {
+        "kind": "gamma",
+        "params": {
+          "shape": 4,
+          "scale": 0.5
+        },
+        "unit": "hour"
+      },
+      "evidence": [
+        {
+          "id": "ev-8",
+          "source_id": "src-crm-export",
+          "type": "log_data",
+          "locator": "meetings booked"
+        }
+      ]
+    },
+    {
+      "id": "proposal",
+      "name": "Proposal + close",
+      "domain_id": "RACE-C",
+      "resource_ids": [
+        "account-execs"
+      ],
+      "service": {
+        "kind": "gamma",
+        "params": {
+          "shape": 4,
+          "scale": 1.0
+        },
+        "unit": "hour"
+      },
+      "evidence": [
+        {
+          "id": "ev-9",
+          "source_id": "src-crm-export",
+          "type": "log_data",
+          "locator": "deals won/lost"
+        }
+      ]
+    },
+    {
+      "id": "delivery",
+      "name": "Project delivery",
+      "domain_id": "fulfillment",
+      "resource_ids": [
+        "consultants"
+      ],
+      "service": {
+        "kind": "lognormal",
+        "params": {
+          "mean": 30,
+          "cv": 0.4
+        },
+        "unit": "hour"
+      },
+      "queue_length": 0,
+      "evidence": [
+        {
+          "id": "ev-10",
+          "source_id": "src-finance-export",
+          "type": "log_data",
+          "locator": "project hours"
+        }
+      ]
+    },
+    {
+      "id": "invoice",
+      "name": "Invoice + collect",
+      "domain_id": "finance",
+      "resource_ids": [
+        "bookkeeper"
+      ],
+      "service": {
+        "kind": "fixed",
+        "params": {
+          "value": 0.75
+        },
+        "unit": "hour"
+      },
+      "evidence": [
+        {
+          "id": "ev-11",
+          "source_id": "src-finance-export",
+          "type": "log_data",
+          "locator": "invoice dates"
+        }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "source": "inbound-lead",
+      "target": "first-response",
+      "probability": 1.0
+    },
+    {
+      "source": "first-response",
+      "target": "discovery-meeting",
+      "probability": 0.09,
+      "label": "meeting booked"
+    },
+    {
+      "source": "discovery-meeting",
+      "target": "proposal",
+      "probability": 0.7
+    },
+    {
+      "source": "proposal",
+      "target": "delivery",
+      "probability": 0.31,
+      "label": "won"
+    },
+    {
+      "source": "delivery",
+      "target": "invoice",
+      "probability": 1.0
+    }
+  ],
+  "metrics": [
+    {
+      "id": "reach-leads",
+      "domain_id": "RACE-R",
+      "name": "inbound leads",
+      "value": 455,
+      "unit": "leads/month",
+      "period": "2026-10",
+      "measured": true,
+      "source_id": "src-crm-export",
+      "benchmark": 400,
+      "higher_is_better": true
+    },
+    {
+      "id": "acq-speed",
+      "domain_id": "RACE-A",
+      "name": "median first response",
+      "value": 52,
+      "unit": "h",
+      "period": "2026-10",
+      "measured": true,
+      "source_id": "src-crm-export",
+      "benchmark": 1,
+      "higher_is_better": false
+    },
+    {
+      "id": "acq-book",
+      "domain_id": "RACE-A",
+      "name": "lead -> meeting rate",
+      "value": 0.09,
+      "unit": "ratio",
+      "period": "2026-10",
+      "measured": true,
+      "source_id": "src-crm-export",
+      "benchmark": 0.25,
+      "higher_is_better": true
+    },
+    {
+      "id": "conv-close",
+      "domain_id": "RACE-C",
+      "name": "close rate",
+      "value": 0.31,
+      "unit": "ratio",
+      "period": "2026-10",
+      "measured": true,
+      "source_id": "src-crm-export",
+      "benchmark": 0.3,
+      "higher_is_better": true
+    },
+    {
+      "id": "exp-churn",
+      "domain_id": "RACE-E",
+      "name": "annual logo churn",
+      "value": 0.12,
+      "unit": "ratio",
+      "period": "2026-10",
+      "measured": true,
+      "source_id": "src-crm-export",
+      "benchmark": 0.15,
+      "higher_is_better": false
+    },
+    {
+      "id": "ful-ontime",
+      "domain_id": "fulfillment",
+      "name": "projects on time",
+      "value": 0.92,
+      "unit": "ratio",
+      "period": "2026-10",
+      "measured": true,
+      "source_id": "src-finance-export",
+      "benchmark": 0.85,
+      "higher_is_better": true
+    },
+    {
+      "id": "fin-dso",
+      "domain_id": "finance",
+      "name": "days sales outstanding",
+      "value": 34,
+      "unit": "days",
+      "period": "2026-10",
+      "measured": true,
+      "source_id": "src-finance-export",
+      "benchmark": 30,
+      "higher_is_better": false
+    },
+    {
+      "id": "sup-frt",
+      "domain_id": "support",
+      "name": "client first response",
+      "value": 3,
+      "unit": "h",
+      "period": "2026-10",
+      "measured": true,
+      "source_id": "src-crm-export",
+      "benchmark": 4,
+      "higher_is_better": false
+    },
+    {
+      "id": "ops-util",
+      "domain_id": "ops",
+      "name": "billable utilization",
+      "value": 0.62,
+      "unit": "ratio",
+      "period": "2026-10",
+      "measured": true,
+      "source_id": "src-finance-export"
+    },
+    {
+      "id": "hr-tth",
+      "domain_id": "hr",
+      "name": "time to hire",
+      "value": 38,
+      "unit": "days",
+      "period": "2026-10",
+      "measured": false,
+      "source_id": "src-intv-ceo",
+      "benchmark": 45,
+      "higher_is_better": false
+    },
+    {
+      "id": "proc-stock",
+      "domain_id": "procurement",
+      "name": "stockouts",
+      "value": 0,
+      "unit": "count",
+      "period": "2026-10",
+      "measured": false,
+      "source_id": "src-intv-ceo"
+    },
+    {
+      "id": "prod-release",
+      "domain_id": "product",
+      "name": "internal tooling backlog",
+      "value": 4,
+      "unit": "items",
+      "period": "2026-10",
+      "measured": false,
+      "source_id": "src-intv-ceo"
+    },
+    {
+      "id": "it-manual",
+      "domain_id": "it",
+      "name": "manual CRM->invoice re-keying",
+      "value": 2,
+      "unit": "h/week",
+      "period": "2026-10",
+      "measured": false,
+      "source_id": "src-intv-ceo"
+    },
+    {
+      "id": "legal-queue",
+      "domain_id": "legal",
+      "name": "contracts awaiting review",
+      "value": 1,
+      "unit": "count",
+      "period": "2026-10",
+      "measured": false,
+      "source_id": "src-intv-ceo"
+    },
+    {
+      "id": "mgmt-approvals",
+      "domain_id": "mgmt",
+      "name": "proposal approval wait",
+      "value": 4,
+      "unit": "h",
+      "period": "2026-10",
+      "measured": false,
+      "source_id": "src-intv-ceo",
+      "benchmark": 24,
+      "higher_is_better": false
+    }
+  ],
+  "expected": {
+    "top_domain": "RACE-A",
+    "direction": "market_limited",
+    "must_rank_below_top": [
+      "finance",
+      "fulfillment"
+    ],
+    "coverage_issues": 0
+  }
+}
