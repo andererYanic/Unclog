@@ -116,6 +116,15 @@ def cmd_flow_from_log(args: argparse.Namespace) -> int:
         print(f"{args.source_id}: no event log detected")
         return 1
     nodes, edges = flow_from_event_log(src.event_logs[0], args.domain, src.source.id)
+    if args.save:
+        from .flow.from_eventlog import _slug
+        from .orchestrator.assemble import save_fragment
+
+        activity = {e.activity: f"log-{_slug(e.activity)}" for e in src.event_logs[0].events}
+        path = save_fragment(
+            store, f"log-{src.source.id}", nodes, edges, args.domain, src.source.id, activity
+        )
+        print(f"saved flow fragment: {path}")
     p = {(e.source, e.target): e.probability for e in edges}
     for i, n in enumerate(nodes):
         nxt = nodes[i + 1].id if i + 1 < len(nodes) else None
@@ -582,6 +591,20 @@ def cmd_security_scan(args: argparse.Namespace) -> int:
     return 1 if found else 0
 
 
+def cmd_assemble_case(args: argparse.Namespace) -> int:
+    from .orchestrator.assemble import assemble
+
+    rep = assemble(ClientStore(_root(args), args.client_id), args.title, args.kind)
+    print(f"case written: {rep.case_path}")
+    for g in rep.gaps:
+        print(f"gap: {g}")
+    print(
+        "next: unclog --clients-root ... pipeline --case "
+        f"{rep.case_path.parent} --client-id {args.client_id} --out <dir>"
+    )
+    return 0
+
+
 def cmd_eval_cases(args: argparse.Namespace) -> int:
     from .evals.runner import MAX_RACE_BACKEND_GAP, run_all
 
@@ -659,6 +682,7 @@ def main(argv: list[str] | None = None) -> int:
     pf.add_argument("client_id")
     pf.add_argument("source_id")
     pf.add_argument("--domain", required=True)
+    pf.add_argument("--save", action="store_true", help="save as a flow fragment for the case")
     pf.set_defaults(fn=cmd_flow_from_log)
 
     pg = sub.add_parser("goal-tree", help="goal-factor the confirmed constraint of a case")
@@ -845,6 +869,12 @@ def main(argv: list[str] | None = None) -> int:
     psc = sub.add_parser("security-scan", help="scan a tree for secrets")
     psc.add_argument("path", nargs="?", default=".")
     psc.set_defaults(fn=cmd_security_scan)
+
+    pas = sub.add_parser("assemble-case", help="build a runnable case from a client's store")
+    pas.add_argument("client_id")
+    pas.add_argument("--title", required=True)
+    pas.add_argument("--kind", default="mixed", choices=["race", "backend", "mixed"])
+    pas.set_defaults(fn=cmd_assemble_case)
 
     pm = sub.add_parser("simulate", help="run the standard what-if scenarios on a case")
     pm.add_argument("case_dir")

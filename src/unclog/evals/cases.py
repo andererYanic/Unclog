@@ -31,6 +31,11 @@ class SyntheticCase(UnclogModel):
     tasks: list[Task] = Field(default_factory=list)
     metrics: list[StageMetric] = Field(default_factory=list)
     raw_files: list[str] = Field(default_factory=list)
+    store_sources: list[str] = Field(
+        default_factory=list,
+        description="ids of sources already ingested into the client store "
+        "(real engagements); event_log_domains may be keyed by these ids",
+    )
     event_log_domains: dict[str, str] = Field(
         default_factory=dict, description="raw file -> DomainName value of its event log"
     )

@@ -119,7 +119,7 @@ def run_pipeline(
     cp = Checkpoints(store)
 
     # ---- diagnose (phases 0-4) -----------------------------------------------------------
-    base = run_case(case, lang=lang)
+    base = run_case(case, lang=lang, store=store)
     s.goal, s.sources, s.metrics = case.goal, list(case.sources), list(case.metrics)
     s.graph, s.heat, s.report = case.graph(), base.heat, base.report
     s.phase = 4

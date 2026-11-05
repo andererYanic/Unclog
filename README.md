@@ -13,7 +13,8 @@ unclog eval-cases               # diagnose all synthetic cases; accuracy split R
 unclog simulate evals/cases/backend_fulfillment_flood --gate design   # what-if scenarios
 unclog call-plan --lang de [--case <dir>]         # bilingual first-call plan (+ tailored follow-ups)
 unclog extract-call <client_id> <source_id>       # transcript -> verified facts + review sheet (needs API access)
-unclog flow-from-log <client_id> <source_id> --domain fulfillment   # measured flow from an event log
+unclog flow-from-log <client_id> <source_id> --domain fulfillment [--save]   # measured flow from an event log
+unclog assemble-case <client_id> --title "..."   # real client -> runnable case (see decision 018)
 unclog goal-tree --case <dir> --lang de [--mermaid]   # goal-factor the confirmed constraint (needs API access)
 unclog opportunities --case <dir> --lang de          # goal tree + AI opportunity map (needs API access)
 unclog eval-agent goal_factoring --n 10 [--judge] [--model M]   # N-run eval + G14 gate (needs API access)

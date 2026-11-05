@@ -34,15 +34,20 @@ class CaseResult:
         return all(self.checks.values())
 
 
-def run_case(case: SyntheticCase, lang: str = "en") -> CaseResult:
+def run_case(case: SyntheticCase, lang: str = "en", store=None) -> CaseResult:
+    """``store``: a ClientStore; needed when the case references ``store_sources``."""
     logs: list[tuple[str, EventLogStats, str]] = []
     texts: list[TextItem] = []
-    for f in case.raw_files:
-        r = ingest_file(case.raw_path(f))
+    results = [(f, ingest_file(case.raw_path(f))) for f in case.raw_files]
+    if case.store_sources:
+        if store is None:
+            raise ValueError(f"{case.id}: references store sources; pass the client store")
+        results += [(sid, store.get_source(sid, actor="pipeline")) for sid in case.store_sources]
+    for key, r in results:
         for log in r.event_logs:
-            dom = case.event_log_domains.get(f)
+            dom = case.event_log_domains.get(key) or case.event_log_domains.get(r.source.id)
             if dom is None:
-                raise ValueError(f"{case.id}: event log {f} needs event_log_domains entry")
+                raise ValueError(f"{case.id}: event log {key} needs event_log_domains entry")
             logs.append((dom, compute(log), r.source.id))
         testimony = r.source.kind is SourceKind.interview
         texts += [TextItem(c.source_id, c.locator, c.text, testimony) for c in r.chunks]
