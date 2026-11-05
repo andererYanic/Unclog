@@ -1,0 +1,232 @@
+{
+  "id": "conflicting_testimony",
+  "title": "SaaS: CEO blames sales, helpdesk log disagrees",
+  "kind": "backend",
+  "traps": [
+    "noisy/conflicting interview vs log data",
+    "testimony alone must not confirm a constraint"
+  ],
+  "description": "CEO says sales cycles are the problem (estimate only). The helpdesk log shows 140 tickets/week against capacity for ~123; first responses drift to days and churn is above benchmark.",
+  "sources": [
+    {
+      "id": "src-helpdesk",
+      "kind": "event_log",
+      "title": "Helpdesk export"
+    },
+    {
+      "id": "src-crm-saas",
+      "kind": "export",
+      "title": "CRM export"
+    },
+    {
+      "id": "src-intv-ceo-saas",
+      "kind": "interview",
+      "title": "Call with CEO"
+    }
+  ],
+  "resources": [
+    {
+      "id": "support-team",
+      "name": "Support agents",
+      "kind": "team",
+      "count": 3,
+      "hours_per_period": 35,
+      "evidence": [
+        {
+          "id": "ev-1",
+          "source_id": "src-helpdesk",
+          "type": "log_data",
+          "locator": "agents on tickets"
+        }
+      ]
+    },
+    {
+      "id": "aes",
+      "name": "Account executives",
+      "kind": "team",
+      "count": 2,
+      "hours_per_period": 35,
+      "evidence": [
+        {
+          "id": "ev-2",
+          "source_id": "src-crm-saas",
+          "type": "document",
+          "locator": "org chart"
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "id": "trials",
+      "name": "Trial sign-ups",
+      "domain_id": "RACE-A",
+      "arrival": {
+        "kind": "poisson",
+        "params": {
+          "rate": 60
+        },
+        "unit": "week"
+      },
+      "evidence": [
+        {
+          "id": "ev-3",
+          "source_id": "src-crm-saas",
+          "type": "log_data",
+          "locator": "trials"
+        }
+      ]
+    },
+    {
+      "id": "sales-call",
+      "name": "Sales call + close",
+      "domain_id": "RACE-C",
+      "resource_ids": [
+        "aes"
+      ],
+      "service": {
+        "kind": "gamma",
+        "params": {
+          "shape": 2,
+          "scale": 1
+        },
+        "unit": "hour"
+      },
+      "evidence": [
+        {
+          "id": "ev-4",
+          "source_id": "src-crm-saas",
+          "type": "log_data",
+          "locator": "deals"
+        }
+      ]
+    },
+    {
+      "id": "tickets-in",
+      "name": "Customer tickets",
+      "domain_id": "support",
+      "arrival": {
+        "kind": "poisson",
+        "params": {
+          "rate": 140
+        },
+        "unit": "week"
+      },
+      "evidence": [
+        {
+          "id": "ev-5",
+          "source_id": "src-helpdesk",
+          "type": "log_data",
+          "locator": "tickets created"
+        }
+      ]
+    },
+    {
+      "id": "support-queue",
+      "name": "First response",
+      "domain_id": "support",
+      "resource_ids": [
+        "support-team"
+      ],
+      "service": {
+        "kind": "lognormal",
+        "params": {
+          "mean": 0.85,
+          "cv": 0.8
+        },
+        "unit": "hour"
+      },
+      "evidence": [
+        {
+          "id": "ev-6",
+          "source_id": "src-helpdesk",
+          "type": "log_data",
+          "locator": "first response timestamps"
+        }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "source": "trials",
+      "target": "sales-call",
+      "probability": 0.35
+    },
+    {
+      "source": "tickets-in",
+      "target": "support-queue",
+      "probability": 1.0
+    }
+  ],
+  "metrics": [
+    {
+      "id": "cycle",
+      "domain_id": "RACE-C",
+      "name": "sales cycle (CEO's estimate)",
+      "value": 60,
+      "unit": "days",
+      "period": "2026-10",
+      "measured": false,
+      "source_id": "src-intv-ceo-saas",
+      "benchmark": 30,
+      "higher_is_better": false
+    },
+    {
+      "id": "close",
+      "domain_id": "RACE-C",
+      "name": "trial -> paid",
+      "value": 0.2,
+      "unit": "ratio",
+      "period": "2026-10",
+      "measured": true,
+      "source_id": "src-crm-saas",
+      "benchmark": 0.18,
+      "higher_is_better": true
+    },
+    {
+      "id": "trials-vol",
+      "domain_id": "RACE-A",
+      "name": "trial sign-ups",
+      "value": 60,
+      "unit": "per week",
+      "period": "2026-10",
+      "measured": true,
+      "source_id": "src-crm-saas"
+    },
+    {
+      "id": "churn",
+      "domain_id": "RACE-E",
+      "name": "monthly churn",
+      "value": 0.031,
+      "unit": "ratio",
+      "period": "2026-10",
+      "measured": true,
+      "source_id": "src-crm-saas",
+      "benchmark": 0.02,
+      "higher_is_better": false
+    }
+  ],
+  "raw_files": [
+    "helpdesk_events.csv",
+    "interview_ceo.vtt"
+  ],
+  "event_log_domains": {
+    "helpdesk_events.csv": "support"
+  },
+  "activity_nodes": {
+    "first_response": "support-queue"
+  },
+  "expected": {
+    "direction": "capacity_limited",
+    "top_domain": "support",
+    "binding": {
+      "type": "physical",
+      "domain": "support",
+      "target_contains": "support-team"
+    },
+    "work_mode": "full",
+    "must_not_confirm": [
+      "RACE-C"
+    ]
+  }
+}

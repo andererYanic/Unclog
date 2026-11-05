@@ -4,44 +4,29 @@ from pathlib import Path
 
 import pytest
 
-from unclog.domains import build_heat_table
+from unclog.cli import main
 from unclog.evals.cases import load_all
-from unclog.flow import compute
-from unclog.ingestion import ingest_file
+from unclog.evals.runner import MAX_RACE_BACKEND_GAP, run_all, run_case
 
-CASES = load_all(Path(__file__).parent.parent / "evals" / "cases")
-
-
-def run(case):
-    logs = []
-    for f in case.raw_files:
-        r = ingest_file(case.raw_path(f))
-        assert r.event_logs, f"{f} should be detected as an event log"
-        logs.append(("fulfillment", compute(r.event_logs[0]), r.source.id))
-    return build_heat_table(case.metrics, case.graph(), event_logs=logs), logs
+ROOT = Path(__file__).parent.parent / "evals" / "cases"
+CASES = load_all(ROOT)
 
 
 def test_cases_cover_race_and_backend():
-    kinds = {c.kind for c in CASES}
-    assert {"race", "backend"} <= kinds
+    kinds = [c.kind for c in CASES]
+    assert kinds.count("race") >= 2 and kinds.count("backend") >= 2
 
 
 @pytest.mark.parametrize("case", CASES, ids=[c.id for c in CASES])
 def test_case(case):
-    table, logs = run(case)
-    exp = case.expected
-    top = table.candidates()[0].domain.value if table.candidates() else None
-    assert top == exp["top_domain"]
-    assert table.direction.verdict.value == exp["direction"]
-    ranked = [r.domain.value for r in table.ranked()]
-    for d in exp.get("must_rank_below_top", []):
-        assert ranked.index(d) > 0
-    if "coverage_issues" in exp:
-        assert len(table.coverage_issues()) == exp["coverage_issues"]
-    if "min_coverage_issues" in exp:
-        assert len(table.coverage_issues()) >= exp["min_coverage_issues"]
-    if "eventlog_slowest_wait" in exp:
-        assert logs[0][1].slowest_wait().activity == exp["eventlog_slowest_wait"]
+    res = run_case(case)
+    failed = [k for k, v in res.checks.items() if not v]
+    assert res.checks and not failed, f"{case.id}: failed checks {failed}"
+
+
+def test_race_backend_accuracy_gap():
+    s = run_all(ROOT)
+    assert s.race_backend_gap is not None and s.race_backend_gap <= MAX_RACE_BACKEND_GAP
 
 
 def test_flooding_what_if_on_backend_case():
@@ -52,3 +37,11 @@ def test_flooding_what_if_on_backend_case():
     after = g.with_arrival_scale(1.3).bottleneck()
     assert after.resource_id == before.resource_id == "workshop"
     assert after.utilization == pytest.approx(before.utilization * 1.3)
+    assert g.with_arrival_scale(1.3).effective_throughput() == pytest.approx(
+        g.effective_throughput()
+    )  # more leads, same output
+
+
+def test_cli_eval_cases(capsys):
+    assert main(["eval-cases", str(ROOT)]) == 0
+    assert "binding accuracy" in capsys.readouterr().out

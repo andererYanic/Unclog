@@ -1,0 +1,216 @@
+{
+  "id": "market_after_elevation",
+  "title": "Furniture shop after adding two carpenters",
+  "kind": "race",
+  "traps": [
+    "market constraint after capacity is fixed",
+    "inertia: still talks capacity"
+  ],
+  "description": "Workshop now at ~77%, no queue, lead time beats promise. Traffic fell after an ad account change; demand is now the limit.",
+  "sources": [
+    {
+      "id": "src-erp-orders-2027",
+      "kind": "event_log",
+      "title": "ERP orders 2027"
+    },
+    {
+      "id": "src-ads-2027",
+      "kind": "export",
+      "title": "Ads + shop analytics 2027"
+    }
+  ],
+  "resources": [
+    {
+      "id": "workshop",
+      "name": "6 carpenters",
+      "kind": "team",
+      "count": 6,
+      "hours_per_period": 38,
+      "evidence": [
+        {
+          "id": "ev-1",
+          "source_id": "src-erp-orders-2027",
+          "type": "log_data",
+          "locator": "production timestamps"
+        }
+      ]
+    },
+    {
+      "id": "designer",
+      "name": "Designers",
+      "kind": "team",
+      "count": 2,
+      "hours_per_period": 40,
+      "evidence": [
+        {
+          "id": "ev-2",
+          "source_id": "src-erp-orders-2027",
+          "type": "log_data",
+          "locator": "design approvals"
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "id": "visitors",
+      "name": "Shop visitors",
+      "domain_id": "RACE-R",
+      "arrival": {
+        "kind": "poisson",
+        "params": {
+          "rate": 1200
+        },
+        "unit": "week"
+      },
+      "evidence": [
+        {
+          "id": "ev-3",
+          "source_id": "src-ads-2027",
+          "type": "log_data",
+          "locator": "sessions"
+        }
+      ]
+    },
+    {
+      "id": "checkout",
+      "name": "Configurator + checkout",
+      "domain_id": "RACE-C",
+      "evidence": [
+        {
+          "id": "ev-4",
+          "source_id": "src-ads-2027",
+          "type": "log_data",
+          "locator": "orders / sessions"
+        }
+      ]
+    },
+    {
+      "id": "design",
+      "name": "Design approval",
+      "domain_id": "fulfillment",
+      "resource_ids": [
+        "designer"
+      ],
+      "service": {
+        "kind": "gamma",
+        "params": {
+          "shape": 3,
+          "scale": 0.5
+        },
+        "unit": "hour"
+      },
+      "evidence": [
+        {
+          "id": "ev-5",
+          "source_id": "src-erp-orders-2027",
+          "type": "log_data",
+          "locator": "design_approved"
+        }
+      ]
+    },
+    {
+      "id": "production",
+      "name": "Workshop production",
+      "domain_id": "fulfillment",
+      "resource_ids": [
+        "workshop"
+      ],
+      "service": {
+        "kind": "lognormal",
+        "params": {
+          "mean": 8,
+          "cv": 0.35
+        },
+        "unit": "hour"
+      },
+      "queue_length": 0,
+      "wait_time_h": 6,
+      "evidence": [
+        {
+          "id": "ev-6",
+          "source_id": "src-erp-orders-2027",
+          "type": "log_data",
+          "locator": "production timestamps"
+        }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "source": "visitors",
+      "target": "checkout",
+      "probability": 0.0183
+    },
+    {
+      "source": "checkout",
+      "target": "design",
+      "probability": 1.0
+    },
+    {
+      "source": "design",
+      "target": "production",
+      "probability": 1.0
+    }
+  ],
+  "metrics": [
+    {
+      "id": "sessions",
+      "domain_id": "RACE-R",
+      "name": "shop sessions",
+      "value": 1200,
+      "unit": "per week",
+      "period": "2026-10",
+      "measured": true,
+      "source_id": "src-ads-2027",
+      "benchmark": 2000,
+      "higher_is_better": true
+    },
+    {
+      "id": "conv",
+      "domain_id": "RACE-C",
+      "name": "visitor -> order",
+      "value": 0.0183,
+      "unit": "ratio",
+      "period": "2026-10",
+      "measured": true,
+      "source_id": "src-ads-2027",
+      "benchmark": 0.015,
+      "higher_is_better": true
+    },
+    {
+      "id": "repeat",
+      "domain_id": "RACE-E",
+      "name": "repeat purchase rate",
+      "value": 0.09,
+      "unit": "ratio",
+      "period": "2026-10",
+      "measured": true,
+      "source_id": "src-erp-orders-2027",
+      "benchmark": 0.08,
+      "higher_is_better": true
+    },
+    {
+      "id": "leadtime",
+      "domain_id": "fulfillment",
+      "name": "order lead time",
+      "value": 2.5,
+      "unit": "weeks",
+      "period": "2026-10",
+      "measured": true,
+      "source_id": "src-erp-orders-2027",
+      "benchmark": 3,
+      "higher_is_better": false
+    }
+  ],
+  "expected": {
+    "direction": "market_limited",
+    "top_domain": "RACE-R",
+    "binding": {
+      "type": "market",
+      "domain": "RACE-R"
+    },
+    "work_mode": "full",
+    "next_constraint_kind": "physical"
+  }
+}

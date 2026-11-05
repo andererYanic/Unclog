@@ -151,6 +151,39 @@ class FlowGraph:
             scale[e] = scale.get(e, 1.0) * factor
         return FlowGraph(self.nodes, self.edges, self.resources, self.tasks, scale)
 
+    def with_capacity_scale(self, resource_id: str, factor: float) -> FlowGraph:
+        """What-if: scale one resource's capacity (e.g. +10% relief test = 1.1)."""
+        if resource_id not in self._res:
+            raise FlowGraphError(f"unknown resource {resource_id!r}")
+        resources = [
+            r.model_copy(update={"count": r.count * factor}) if r.id == resource_id else r
+            for r in self.resources
+        ]
+        return FlowGraph(self.nodes, self.edges, resources, self.tasks, dict(self.arrival_scale))
+
+    def effective_throughput(self) -> float:
+        """Completions/week the system can actually deliver: offered throughput, capped by the
+        busiest resource. Exact for a single chain, an approximation for branching flows."""
+        b = self.bottleneck()
+        offered = self.throughput()
+        if b is None or b.utilization <= 1:
+            return offered
+        return offered / b.utilization
+
+    def downstream_nodes(self, node_ids: set[str]) -> set[str]:
+        adj: dict[str, list[str]] = {}
+        for e in self.edges:
+            if e.probability > 0:
+                adj.setdefault(e.source, []).append(e.target)
+        seen: set[str] = set()
+        stack = [t for n in node_ids for t in adj.get(n, [])]
+        while stack:
+            n = stack.pop()
+            if n not in seen and n not in node_ids:
+                seen.add(n)
+                stack.extend(adj.get(n, []))
+        return seen
+
     def demand(self) -> dict[str, float]:
         n = len(self.nodes)
         lam0 = np.zeros(n)

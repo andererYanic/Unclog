@@ -9,6 +9,7 @@ pytest && ruff check .
 unclog-export-schemas schemas/   # JSON Schema for every core entity
 unclog ingest <client_id> <upload_folder>   # ingest client files into clients/<client_id>/
 unclog sources <client_id>
+unclog eval-cases               # diagnose all synthetic cases; accuracy split RACE vs back-end
 ```
 
 ## Status (build plan §19)
@@ -16,4 +17,5 @@ unclog sources <client_id>
 - [x] 2. Schemas (§13) with evidence enforcement and invariants for G4, G5, G12, G13, G14 and privacy
 - [x] 3. Per-client store (versioned, agent-owned artifacts, audit log, delete command); file ingestion (csv/tsv, xlsx, pdf, docx, txt/md, vtt/srt, json, eml) with PII scrubbing and event-log detection; connector interface with file uploads as route 1 (decision 003)
 - [x] 4. Flow graph (offered load incl. funnels/rework, load/capacity, wait estimates, what-if scaling), event-log statistics, RACE + back-end heat table with both-direction check and G5 coverage; 3 synthetic cases in `evals/cases/` (decision 004)
-- [ ] 5–17. See brief
+- [x] 5. Constraint identification: physical/policy/market hypotheses, confirmation tests (relief, starvation, queue, expedite, absence), evidence families, policy & KPI audit, G4 discovery-only mode, next-constraint prediction; 6 synthetic cases at 100% (decision 005)
+- [ ] 6–17. See brief

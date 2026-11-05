@@ -35,6 +35,16 @@ def cmd_sources(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_eval_cases(args: argparse.Namespace) -> int:
+    from .evals.runner import MAX_RACE_BACKEND_GAP, run_all
+
+    summary = run_all(args.root)
+    print(summary.to_text())
+    gap = summary.race_backend_gap
+    ok = all(r.passed for r in summary.results) and (gap is None or gap <= MAX_RACE_BACKEND_GAP)
+    return 0 if ok else 1
+
+
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(prog="unclog")
     p.add_argument("--clients-root", help="default: $UNCLOG_CLIENTS_ROOT or ./clients")
@@ -50,6 +60,10 @@ def main(argv: list[str] | None = None) -> int:
     ps = sub.add_parser("sources", help="list ingested sources for a client")
     ps.add_argument("client_id")
     ps.set_defaults(fn=cmd_sources)
+
+    pe = sub.add_parser("eval-cases", help="run synthetic cases and score diagnosis accuracy")
+    pe.add_argument("root", nargs="?", default="evals/cases")
+    pe.set_defaults(fn=cmd_eval_cases)
 
     args = p.parse_args(argv)
     return args.fn(args)

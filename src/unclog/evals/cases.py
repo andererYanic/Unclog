@@ -29,6 +29,12 @@ class SyntheticCase(UnclogModel):
     tasks: list[Task] = Field(default_factory=list)
     metrics: list[StageMetric] = Field(default_factory=list)
     raw_files: list[str] = Field(default_factory=list)
+    event_log_domains: dict[str, str] = Field(
+        default_factory=dict, description="raw file -> DomainName value of its event log"
+    )
+    activity_nodes: dict[str, str] = Field(
+        default_factory=dict, description="event-log activity -> flow node it waits in front of"
+    )
     expected: dict[str, Any] = Field(default_factory=dict)
 
     folder: Path | None = Field(None, exclude=True)

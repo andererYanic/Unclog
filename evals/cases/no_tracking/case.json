@@ -29,6 +29,8 @@
   "expected": {
     "top_domain": null,
     "direction": "no_flow_data",
-    "min_coverage_issues": 12
+    "min_coverage_issues": 12,
+    "binding": null,
+    "work_mode": "discovery_only"
   }
 }

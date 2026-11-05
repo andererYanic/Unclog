@@ -60,6 +60,32 @@ class EvidenceType(StrEnum):
     measurement = "measurement"
 
 
+class EvidenceFamily(StrEnum):
+    """Independence groups. Two types from one family (e.g. a log and a calculation built on
+    that log) are not independent; G4 counts families, not types (decision 005)."""
+
+    data = "data"  # logs, exports, measured queues/idle time
+    model = "model"  # load/capacity calculations, simulation
+    testimony = "testimony"  # interviews, expedite/absence reports
+    document = "document"  # SOPs, contracts, policies
+    reference = "reference"  # benchmarks: context, never confirmation
+
+
+EVIDENCE_FAMILY: dict[EvidenceType, EvidenceFamily] = {
+    EvidenceType.log_data: EvidenceFamily.data,
+    EvidenceType.measurement: EvidenceFamily.data,
+    EvidenceType.queue_observation: EvidenceFamily.data,
+    EvidenceType.starvation_signal: EvidenceFamily.data,
+    EvidenceType.load_capacity_calc: EvidenceFamily.model,
+    EvidenceType.simulation: EvidenceFamily.model,
+    EvidenceType.interview_claim: EvidenceFamily.testimony,
+    EvidenceType.expedite_signal: EvidenceFamily.testimony,
+    EvidenceType.absence_test: EvidenceFamily.testimony,
+    EvidenceType.document: EvidenceFamily.document,
+    EvidenceType.benchmark: EvidenceFamily.reference,
+}
+
+
 class Evidence(UnclogModel):
     id: Id
     source_id: Id
@@ -88,6 +114,12 @@ class Grounded(UnclogModel):
 
     def evidence_types(self) -> set[EvidenceType]:
         return {e.type for e in self.evidence}
+
+    def confirming_families(self) -> set[EvidenceFamily]:
+        """Independent evidence families that can confirm a claim (benchmarks excluded)."""
+        fams = {EVIDENCE_FAMILY[e.type] for e in self.evidence}
+        fams.discard(EvidenceFamily.reference)
+        return fams
 
 
 class AgentOutput(UnclogModel):

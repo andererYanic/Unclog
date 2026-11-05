@@ -199,11 +199,12 @@ class Constraint(Grounded):
 
     @model_validator(mode="after")
     def _confirmation_rule(self) -> Self:
-        # G4: confirmed needs >=2 independent evidence types and a passed confirmation test.
+        # G4: confirmed needs >=2 independent evidence families and a passed confirmation test.
         if self.status is ConstraintStatus.confirmed:
-            if len(self.evidence_types()) < 2:
+            if len(self.confirming_families()) < 2:
                 raise ValueError(
-                    f"Constraint {self.id}: 'confirmed' needs >=2 independent evidence types"
+                    f"Constraint {self.id}: 'confirmed' needs >=2 independent evidence "
+                    f"families (has {sorted(self.confirming_families())})"
                 )
             if not any(t.passed for t in self.tests_run):
                 raise ValueError(f"Constraint {self.id}: 'confirmed' needs a passed test")
@@ -229,6 +230,8 @@ class Policy(Grounded):
     local_optimum: bool = False
     inherited_from_constraint_id: Id | None = Field(None, description="inertia tracking")
     recommendation: str | None = None
+    domain_id: Id | None = None
+    affects_node_ids: list[Id] = Field(default_factory=list)
 
 
 class Buffer(UnclogModel):

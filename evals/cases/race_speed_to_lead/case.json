@@ -450,6 +450,17 @@
       "finance",
       "fulfillment"
     ],
-    "coverage_issues": 0
+    "coverage_issues": 0,
+    "binding": {
+      "type": "policy",
+      "domain": "RACE-A",
+      "target_contains": "batch"
+    },
+    "work_mode": "full",
+    "must_not_confirm": [
+      "finance",
+      "fulfillment"
+    ],
+    "local_optimum_flagged": true
   }
 }

@@ -259,6 +259,13 @@
   "raw_files": [
     "orders_events.csv"
   ],
+  "event_log_domains": {
+    "orders_events.csv": "fulfillment"
+  },
+  "activity_nodes": {
+    "production_start": "production",
+    "design_approved": "design"
+  },
   "expected": {
     "top_domain": "fulfillment",
     "direction": "capacity_limited",
@@ -266,6 +273,17 @@
       "RACE-C",
       "RACE-R"
     ],
-    "eventlog_slowest_wait": "production_start"
+    "eventlog_slowest_wait": "production_start",
+    "binding": {
+      "type": "physical",
+      "domain": "fulfillment",
+      "target_contains": "workshop"
+    },
+    "work_mode": "full",
+    "next_constraint_kind": "physical",
+    "must_not_confirm": [
+      "RACE-C",
+      "support"
+    ]
   }
 }

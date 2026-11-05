@@ -1,0 +1,276 @@
+{
+  "id": "hidden_policy_approval",
+  "title": "Kitchen installer: quotes take 6 days",
+  "kind": "backend",
+  "traps": [
+    "hidden policy constraint (owner sign-off batch)",
+    "symptom shows up in a RACE metric",
+    "estimator KPI rewards local efficiency"
+  ],
+  "description": "Quote turnaround is 6 days vs 2 expected. Estimators finish in hours, but every quote above 5k needs the owner's sign-off, done on Fridays. No resource is overloaded.",
+  "sources": [
+    {
+      "id": "src-crm-quotes",
+      "kind": "export",
+      "title": "CRM quote status export"
+    },
+    {
+      "id": "src-intv-sales",
+      "kind": "interview",
+      "title": "Call with sales lead"
+    }
+  ],
+  "resources": [
+    {
+      "id": "sales-reps",
+      "name": "Sales reps",
+      "kind": "team",
+      "count": 2,
+      "hours_per_period": 35,
+      "evidence": [
+        {
+          "id": "ev-1",
+          "source_id": "src-crm-quotes",
+          "type": "document",
+          "locator": "org chart"
+        }
+      ]
+    },
+    {
+      "id": "estimators",
+      "name": "Estimators",
+      "kind": "team",
+      "count": 3,
+      "hours_per_period": 38,
+      "evidence": [
+        {
+          "id": "ev-2",
+          "source_id": "src-crm-quotes",
+          "type": "document",
+          "locator": "org chart"
+        }
+      ]
+    },
+    {
+      "id": "owner",
+      "name": "Owner",
+      "kind": "person",
+      "count": 1,
+      "hours_per_period": 6,
+      "evidence": [
+        {
+          "id": "ev-3",
+          "source_id": "src-intv-sales",
+          "type": "interview_claim",
+          "locator": "t=00:08:00",
+          "quote": "I block Friday mornings for approvals."
+        }
+      ]
+    },
+    {
+      "id": "install-crew",
+      "name": "Installation crews",
+      "kind": "team",
+      "count": 5,
+      "hours_per_period": 38,
+      "evidence": [
+        {
+          "id": "ev-4",
+          "source_id": "src-crm-quotes",
+          "type": "document",
+          "locator": "org chart"
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "id": "rfq",
+      "name": "Request for quote",
+      "domain_id": "RACE-A",
+      "resource_ids": [
+        "sales-reps"
+      ],
+      "arrival": {
+        "kind": "poisson",
+        "params": {
+          "rate": 30
+        },
+        "unit": "week"
+      },
+      "service": {
+        "kind": "fixed",
+        "params": {
+          "value": 0.5
+        },
+        "unit": "hour"
+      },
+      "evidence": [
+        {
+          "id": "ev-5",
+          "source_id": "src-crm-quotes",
+          "type": "log_data",
+          "locator": "rows"
+        }
+      ]
+    },
+    {
+      "id": "quote-prep",
+      "name": "Quote preparation",
+      "domain_id": "RACE-C",
+      "resource_ids": [
+        "estimators"
+      ],
+      "service": {
+        "kind": "gamma",
+        "params": {
+          "shape": 4,
+          "scale": 0.5
+        },
+        "unit": "hour"
+      },
+      "wait_time_h": 10,
+      "evidence": [
+        {
+          "id": "ev-6",
+          "source_id": "src-crm-quotes",
+          "type": "log_data",
+          "locator": "rows"
+        }
+      ]
+    },
+    {
+      "id": "owner-approval",
+      "name": "Owner approval of quotes",
+      "domain_id": "mgmt",
+      "resource_ids": [
+        "owner"
+      ],
+      "service": {
+        "kind": "fixed",
+        "params": {
+          "value": 9
+        },
+        "unit": "minute"
+      },
+      "batch_size": 30,
+      "wait_time_h": 96,
+      "evidence": [
+        {
+          "id": "ev-7",
+          "source_id": "src-crm-quotes",
+          "type": "queue_observation",
+          "locator": "quotes in status 'awaiting approval'"
+        }
+      ]
+    },
+    {
+      "id": "install",
+      "name": "Installation",
+      "domain_id": "fulfillment",
+      "resource_ids": [
+        "install-crew"
+      ],
+      "service": {
+        "kind": "lognormal",
+        "params": {
+          "mean": 12,
+          "cv": 0.3
+        },
+        "unit": "hour"
+      },
+      "evidence": [
+        {
+          "id": "ev-8",
+          "source_id": "src-crm-quotes",
+          "type": "log_data",
+          "locator": "rows"
+        }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "source": "rfq",
+      "target": "quote-prep",
+      "probability": 0.9
+    },
+    {
+      "source": "quote-prep",
+      "target": "owner-approval",
+      "probability": 1.0
+    },
+    {
+      "source": "owner-approval",
+      "target": "install",
+      "probability": 0.3,
+      "label": "won"
+    }
+  ],
+  "metrics": [
+    {
+      "id": "rfq-volume",
+      "domain_id": "RACE-A",
+      "name": "requests for quote",
+      "value": 30,
+      "unit": "per week",
+      "period": "2026-10",
+      "measured": true,
+      "source_id": "src-crm-quotes",
+      "benchmark": 25,
+      "higher_is_better": true
+    },
+    {
+      "id": "quote-turnaround",
+      "domain_id": "RACE-C",
+      "name": "quote turnaround",
+      "value": 6,
+      "unit": "days",
+      "period": "2026-10",
+      "measured": true,
+      "source_id": "src-crm-quotes",
+      "benchmark": 2,
+      "higher_is_better": false
+    },
+    {
+      "id": "win-rate",
+      "domain_id": "RACE-C",
+      "name": "quote win rate",
+      "value": 0.3,
+      "unit": "ratio",
+      "period": "2026-10",
+      "measured": true,
+      "source_id": "src-crm-quotes",
+      "benchmark": 0.3,
+      "higher_is_better": true
+    },
+    {
+      "id": "install-ontime",
+      "domain_id": "fulfillment",
+      "name": "installs on time",
+      "value": 0.93,
+      "unit": "ratio",
+      "period": "2026-10",
+      "measured": true,
+      "source_id": "src-crm-quotes",
+      "benchmark": 0.9,
+      "higher_is_better": true
+    }
+  ],
+  "raw_files": [
+    "pricing_policy.md"
+  ],
+  "expected": {
+    "direction": "market_limited",
+    "binding": {
+      "type": "policy",
+      "domain": "mgmt",
+      "target_contains": "approval"
+    },
+    "work_mode": "full",
+    "must_not_confirm": [
+      "RACE-C"
+    ],
+    "local_optimum_flagged": true
+  }
+}

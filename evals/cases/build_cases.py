@@ -246,6 +246,10 @@ def race_speed_to_lead() -> dict:
             "direction": "market_limited",
             "must_rank_below_top": ["finance", "fulfillment"],
             "coverage_issues": 0,
+            "binding": {"type": "policy", "domain": "RACE-A", "target_contains": "batch"},
+            "work_mode": "full",
+            "must_not_confirm": ["finance", "fulfillment"],
+            "local_optimum_flagged": True,
         },
     }
 
@@ -412,11 +416,17 @@ def backend_fulfillment_flood() -> dict:
         "edges": edges,
         "metrics": metrics,
         "raw_files": ["orders_events.csv"],
+        "event_log_domains": {"orders_events.csv": "fulfillment"},
+        "activity_nodes": {"production_start": "production", "design_approved": "design"},
         "expected": {
             "top_domain": "fulfillment",
             "direction": "capacity_limited",
             "must_rank_below_top": ["RACE-C", "RACE-R"],
             "eventlog_slowest_wait": "production_start",
+            "binding": {"type": "physical", "domain": "fulfillment", "target_contains": "workshop"},
+            "work_mode": "full",
+            "next_constraint_kind": "physical",
+            "must_not_confirm": ["RACE-C", "support"],
         },
     }
 
@@ -436,7 +446,396 @@ def no_tracking() -> dict:
         "traps": ["client with no tracking: first deliverable is instrumentation"],
         "description": "Owner can only guess two numbers. No exports, no flow data.",
         "metrics": metrics,
-        "expected": {"top_domain": None, "direction": "no_flow_data", "min_coverage_issues": 12},
+        "expected": {
+            "top_domain": None,
+            "direction": "no_flow_data",
+            "min_coverage_issues": 12,
+            "binding": None,
+            "work_mode": "discovery_only",
+        },
+    }
+
+
+# --------------------------------------------------------------------------------------------
+# Case 4: hidden policy constraint: owner signs quotes once a week. Quote turnaround looks like
+# a sales (RACE-C) problem; nobody is overloaded.
+# --------------------------------------------------------------------------------------------
+def hidden_policy_approval() -> dict:
+    crm, intv = "src-crm-quotes", "src-intv-sales"
+    E = lambda i, t="log_data", loc="rows": [ev(i, crm, t, loc)]  # noqa: E731
+    resources = [
+        {
+            "id": "sales-reps",
+            "name": "Sales reps",
+            "kind": "team",
+            "count": 2,
+            "hours_per_period": 35,
+            "evidence": E(1, "document", "org chart"),
+        },
+        {
+            "id": "estimators",
+            "name": "Estimators",
+            "kind": "team",
+            "count": 3,
+            "hours_per_period": 38,
+            "evidence": E(2, "document", "org chart"),
+        },
+        {
+            "id": "owner",
+            "name": "Owner",
+            "kind": "person",
+            "count": 1,
+            "hours_per_period": 6,
+            "evidence": [
+                ev(
+                    3,
+                    intv,
+                    "interview_claim",
+                    "t=00:08:00",
+                    "I block Friday mornings for approvals.",
+                )
+            ],
+        },
+        {
+            "id": "install-crew",
+            "name": "Installation crews",
+            "kind": "team",
+            "count": 5,
+            "hours_per_period": 38,
+            "evidence": E(4, "document", "org chart"),
+        },
+    ]
+    nodes = [
+        {
+            "id": "rfq",
+            "name": "Request for quote",
+            "domain_id": "RACE-A",
+            "resource_ids": ["sales-reps"],
+            "arrival": {"kind": "poisson", "params": {"rate": 30}, "unit": "week"},
+            "service": {"kind": "fixed", "params": {"value": 0.5}, "unit": "hour"},
+            "evidence": E(5),
+        },
+        {
+            "id": "quote-prep",
+            "name": "Quote preparation",
+            "domain_id": "RACE-C",
+            "resource_ids": ["estimators"],
+            "service": {"kind": "gamma", "params": {"shape": 4, "scale": 0.5}, "unit": "hour"},
+            "wait_time_h": 10,
+            "evidence": E(6),
+        },
+        {
+            "id": "owner-approval",
+            "name": "Owner approval of quotes",
+            "domain_id": "mgmt",
+            "resource_ids": ["owner"],
+            "service": {"kind": "fixed", "params": {"value": 9}, "unit": "minute"},
+            "batch_size": 30,
+            "wait_time_h": 96,
+            "evidence": E(7, "queue_observation", "quotes in status 'awaiting approval'"),
+        },
+        {
+            "id": "install",
+            "name": "Installation",
+            "domain_id": "fulfillment",
+            "resource_ids": ["install-crew"],
+            "service": {"kind": "lognormal", "params": {"mean": 12, "cv": 0.3}, "unit": "hour"},
+            "evidence": E(8),
+        },
+    ]
+    edges = [
+        {"source": "rfq", "target": "quote-prep", "probability": 0.9},
+        {"source": "quote-prep", "target": "owner-approval", "probability": 1.0},
+        {"source": "owner-approval", "target": "install", "probability": 0.3, "label": "won"},
+    ]
+    metrics = [
+        m("rfq-volume", "RACE-A", "requests for quote", 30, "per week", src=crm, bm=25, hib=True),
+        m("quote-turnaround", "RACE-C", "quote turnaround", 6, "days", src=crm, bm=2, hib=False),
+        m("win-rate", "RACE-C", "quote win rate", 0.3, "ratio", src=crm, bm=0.3, hib=True),
+        m(
+            "install-ontime",
+            "fulfillment",
+            "installs on time",
+            0.93,
+            "ratio",
+            src=crm,
+            bm=0.9,
+            hib=True,
+        ),
+    ]
+    return {
+        "id": "hidden_policy_approval",
+        "title": "Kitchen installer: quotes take 6 days",
+        "kind": "backend",
+        "traps": [
+            "hidden policy constraint (owner sign-off batch)",
+            "symptom shows up in a RACE metric",
+            "estimator KPI rewards local efficiency",
+        ],
+        "description": "Quote turnaround is 6 days vs 2 expected. Estimators finish in hours, "
+        "but every quote above 5k needs the owner's sign-off, done on Fridays. "
+        "No resource is overloaded.",
+        "sources": [
+            {"id": crm, "kind": "export", "title": "CRM quote status export"},
+            {"id": intv, "kind": "interview", "title": "Call with sales lead"},
+        ],
+        "resources": resources,
+        "nodes": nodes,
+        "edges": edges,
+        "metrics": metrics,
+        "raw_files": ["pricing_policy.md"],
+        "expected": {
+            "direction": "market_limited",
+            "binding": {"type": "policy", "domain": "mgmt", "target_contains": "approval"},
+            "work_mode": "full",
+            "must_not_confirm": ["RACE-C"],
+            "local_optimum_flagged": True,
+        },
+    }
+
+
+POLICY_MD = """# Pricing & quoting policy v2 (2023)
+
+Every quote above 5,000 EUR needs sign-off by the owner. The owner signs them on Fridays.
+
+Estimators are measured on quotes prepared per week; the quarterly bonus is tied to that number.
+"""
+
+
+# --------------------------------------------------------------------------------------------
+# Case 5: market constraint after capacity was fixed (furniture shop, six months later).
+# --------------------------------------------------------------------------------------------
+def market_after_elevation() -> dict:
+    erp, ads = "src-erp-orders-2027", "src-ads-2027"
+    resources = [
+        {
+            "id": "workshop",
+            "name": "6 carpenters",
+            "kind": "team",
+            "count": 6,
+            "hours_per_period": 38,
+            "evidence": [ev(1, erp, "log_data", "production timestamps")],
+        },
+        {
+            "id": "designer",
+            "name": "Designers",
+            "kind": "team",
+            "count": 2,
+            "hours_per_period": 40,
+            "evidence": [ev(2, erp, "log_data", "design approvals")],
+        },
+    ]
+    nodes = [
+        {
+            "id": "visitors",
+            "name": "Shop visitors",
+            "domain_id": "RACE-R",
+            "arrival": {"kind": "poisson", "params": {"rate": 1200}, "unit": "week"},
+            "evidence": [ev(3, ads, "log_data", "sessions")],
+        },
+        {
+            "id": "checkout",
+            "name": "Configurator + checkout",
+            "domain_id": "RACE-C",
+            "evidence": [ev(4, ads, "log_data", "orders / sessions")],
+        },
+        {
+            "id": "design",
+            "name": "Design approval",
+            "domain_id": "fulfillment",
+            "resource_ids": ["designer"],
+            "service": {"kind": "gamma", "params": {"shape": 3, "scale": 0.5}, "unit": "hour"},
+            "evidence": [ev(5, erp, "log_data", "design_approved")],
+        },
+        {
+            "id": "production",
+            "name": "Workshop production",
+            "domain_id": "fulfillment",
+            "resource_ids": ["workshop"],
+            "service": {"kind": "lognormal", "params": {"mean": 8, "cv": 0.35}, "unit": "hour"},
+            "queue_length": 0,
+            "wait_time_h": 6,
+            "evidence": [ev(6, erp, "log_data", "production timestamps")],
+        },
+    ]
+    edges = [
+        {"source": "visitors", "target": "checkout", "probability": 0.0183},
+        {"source": "checkout", "target": "design", "probability": 1.0},
+        {"source": "design", "target": "production", "probability": 1.0},
+    ]
+    metrics = [
+        m("sessions", "RACE-R", "shop sessions", 1200, "per week", src=ads, bm=2000, hib=True),
+        m("conv", "RACE-C", "visitor -> order", 0.0183, "ratio", src=ads, bm=0.015, hib=True),
+        m("repeat", "RACE-E", "repeat purchase rate", 0.09, "ratio", src=erp, bm=0.08, hib=True),
+        m("leadtime", "fulfillment", "order lead time", 2.5, "weeks", src=erp, bm=3, hib=False),
+    ]
+    return {
+        "id": "market_after_elevation",
+        "title": "Furniture shop after adding two carpenters",
+        "kind": "race",
+        "traps": ["market constraint after capacity is fixed", "inertia: still talks capacity"],
+        "description": "Workshop now at ~77%, no queue, lead time beats promise. Traffic fell "
+        "after an ad account change; demand is now the limit.",
+        "sources": [
+            {"id": erp, "kind": "event_log", "title": "ERP orders 2027"},
+            {"id": ads, "kind": "export", "title": "Ads + shop analytics 2027"},
+        ],
+        "resources": resources,
+        "nodes": nodes,
+        "edges": edges,
+        "metrics": metrics,
+        "expected": {
+            "direction": "market_limited",
+            "top_domain": "RACE-R",
+            "binding": {"type": "market", "domain": "RACE-R"},
+            "work_mode": "full",
+            "next_constraint_kind": "physical",
+        },
+    }
+
+
+# --------------------------------------------------------------------------------------------
+# Case 6: interview says "sales is the problem"; logs say support is drowning.
+# --------------------------------------------------------------------------------------------
+def tickets_csv(path: Path, seed: int = 11) -> None:
+    rng = random.Random(seed)
+    start = datetime(2026, 9, 7, 8, 0)
+    rows = []
+    free_at = start
+    for i in range(1, 6 * 140 + 1):  # 140 tickets/week for 6 weeks; capacity ~123/week
+        t = start + timedelta(hours=i * 168 / 140 + rng.uniform(-0.5, 0.5))
+        tid = f"T-{50000 + i}"
+        rows.append((tid, "created", t, ""))
+        resp = max(t, free_at) + timedelta(minutes=rng.uniform(5, 40))
+        free_at = resp + timedelta(hours=168 / 123)
+        if resp > datetime(2026, 10, 19):
+            continue
+        agent = rng.choice(["jonas", "lea", "mehmet"])
+        rows.append((tid, "first_response", resp, agent))
+        rows.append((tid, "resolved", resp + timedelta(hours=rng.uniform(1, 20)), agent))
+    rows.sort(key=lambda r: r[2])
+    with path.open("w", newline="") as f:
+        w = csv.writer(f)
+        w.writerow(["ticket_id", "event", "timestamp", "assignee"])
+        for tid, act, ts, who in rows:
+            w.writerow([tid, act, ts.strftime("%Y-%m-%dT%H:%M:%S"), who])
+
+
+INTERVIEW_VTT = """WEBVTT
+
+00:02:10.000 --> 00:02:18.000
+CEO: Our real problem is sales. Closing takes forever, deals drag on for two months.
+
+00:05:40.000 --> 00:05:52.000
+CEO: Support is fine I think. Well, when Jonas from support is on vacation nothing gets answered.
+
+00:06:03.000 --> 00:06:10.000
+CEO: Customers do chase us about tickets, sometimes three times.
+"""
+
+
+def conflicting_testimony() -> dict:
+    hd, crm, intv = "src-helpdesk", "src-crm-saas", "src-intv-ceo-saas"
+    resources = [
+        {
+            "id": "support-team",
+            "name": "Support agents",
+            "kind": "team",
+            "count": 3,
+            "hours_per_period": 35,
+            "evidence": [ev(1, hd, "log_data", "agents on tickets")],
+        },
+        {
+            "id": "aes",
+            "name": "Account executives",
+            "kind": "team",
+            "count": 2,
+            "hours_per_period": 35,
+            "evidence": [ev(2, crm, "document", "org chart")],
+        },
+    ]
+    nodes = [
+        {
+            "id": "trials",
+            "name": "Trial sign-ups",
+            "domain_id": "RACE-A",
+            "arrival": {"kind": "poisson", "params": {"rate": 60}, "unit": "week"},
+            "evidence": [ev(3, crm, "log_data", "trials")],
+        },
+        {
+            "id": "sales-call",
+            "name": "Sales call + close",
+            "domain_id": "RACE-C",
+            "resource_ids": ["aes"],
+            "service": {"kind": "gamma", "params": {"shape": 2, "scale": 1}, "unit": "hour"},
+            "evidence": [ev(4, crm, "log_data", "deals")],
+        },
+        {
+            "id": "tickets-in",
+            "name": "Customer tickets",
+            "domain_id": "support",
+            "arrival": {"kind": "poisson", "params": {"rate": 140}, "unit": "week"},
+            "evidence": [ev(5, hd, "log_data", "tickets created")],
+        },
+        {
+            "id": "support-queue",
+            "name": "First response",
+            "domain_id": "support",
+            "resource_ids": ["support-team"],
+            "service": {"kind": "lognormal", "params": {"mean": 0.85, "cv": 0.8}, "unit": "hour"},
+            "evidence": [ev(6, hd, "log_data", "first response timestamps")],
+        },
+    ]
+    edges = [
+        {"source": "trials", "target": "sales-call", "probability": 0.35},
+        {"source": "tickets-in", "target": "support-queue", "probability": 1.0},
+    ]
+    metrics = [
+        m(
+            "cycle",
+            "RACE-C",
+            "sales cycle (CEO's estimate)",
+            60,
+            "days",
+            src=intv,
+            measured=False,
+            bm=30,
+            hib=False,
+        ),
+        m("close", "RACE-C", "trial -> paid", 0.2, "ratio", src=crm, bm=0.18, hib=True),
+        m("trials-vol", "RACE-A", "trial sign-ups", 60, "per week", src=crm),
+        m("churn", "RACE-E", "monthly churn", 0.031, "ratio", src=crm, bm=0.02, hib=False),
+    ]
+    return {
+        "id": "conflicting_testimony",
+        "title": "SaaS: CEO blames sales, helpdesk log disagrees",
+        "kind": "backend",
+        "traps": [
+            "noisy/conflicting interview vs log data",
+            "testimony alone must not confirm a constraint",
+        ],
+        "description": "CEO says sales cycles are the problem (estimate only). The helpdesk "
+        "log shows 140 tickets/week against capacity for ~123; first responses "
+        "drift to days and churn is above benchmark.",
+        "sources": [
+            {"id": hd, "kind": "event_log", "title": "Helpdesk export"},
+            {"id": crm, "kind": "export", "title": "CRM export"},
+            {"id": intv, "kind": "interview", "title": "Call with CEO"},
+        ],
+        "resources": resources,
+        "nodes": nodes,
+        "edges": edges,
+        "metrics": metrics,
+        "raw_files": ["helpdesk_events.csv", "interview_ceo.vtt"],
+        "event_log_domains": {"helpdesk_events.csv": "support"},
+        "activity_nodes": {"first_response": "support-queue"},
+        "expected": {
+            "direction": "capacity_limited",
+            "top_domain": "support",
+            "binding": {"type": "physical", "domain": "support", "target_contains": "support-team"},
+            "work_mode": "full",
+            "must_not_confirm": ["RACE-C"],
+        },
     }
 
 
@@ -445,4 +844,10 @@ if __name__ == "__main__":
     write(backend_fulfillment_flood())
     events_csv(HERE / "backend_fulfillment_flood" / "orders_events.csv")
     write(no_tracking())
+    write(hidden_policy_approval())
+    (HERE / "hidden_policy_approval" / "pricing_policy.md").write_text(POLICY_MD)
+    write(market_after_elevation())
+    write(conflicting_testimony())
+    tickets_csv(HERE / "conflicting_testimony" / "helpdesk_events.csv")
+    (HERE / "conflicting_testimony" / "interview_ceo.vtt").write_text(INTERVIEW_VTT)
     print("cases written")
