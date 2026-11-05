@@ -5,7 +5,7 @@
 | Question | Blocks |
 |---|---|
 | Target segment and first industries | industry playbooks, benchmarks, synthetic eval cases (§18) |
-| Fully automated vs. human consultant on calls; who attends weekly sync | Intake/Interview agents (step 7), `sync/` |
+| ~~Automated vs. human consultant on calls~~ → answered in 007 (human-led, agent-assisted; DE+EN). Who attends weekly sync: still open | `sync/` |
 | ~~Uploads only vs. live connectors~~ → answered in 003 | — |
 | Commercial model (incl. performance pricing / guarantees) | value-model reporting, legal review |
 | Hosting; routine/cloud-runner platform | `deploy/` (step 12) |

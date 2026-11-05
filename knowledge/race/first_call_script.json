@@ -1,0 +1,445 @@
+{
+  "version": "1.0",
+  "source": "UNCLOG-MASTER-BRIEF §9.2, §11",
+  "sections": [
+    {
+      "id": "goal",
+      "title": {
+        "en": "Goal and measures",
+        "de": "Ziel und Kennzahlen"
+      }
+    },
+    {
+      "id": "race",
+      "title": {
+        "en": "RACE walk (numbers at every stage)",
+        "de": "RACE-Durchgang (Zahlen pro Stufe)"
+      }
+    },
+    {
+      "id": "backend",
+      "title": {
+        "en": "Back-end domains",
+        "de": "Back-End-Bereiche"
+      }
+    },
+    {
+      "id": "flow",
+      "title": {
+        "en": "One unit, start to cash",
+        "de": "Ein Vorgang, vom Anfang bis zum Geldeingang"
+      }
+    },
+    {
+      "id": "pain",
+      "title": {
+        "en": "Pain and constraint probes",
+        "de": "Schmerzpunkte und Engpass-Fragen"
+      }
+    },
+    {
+      "id": "policy",
+      "title": {
+        "en": "Policies and incentives",
+        "de": "Regeln und Anreize"
+      }
+    },
+    {
+      "id": "change",
+      "title": {
+        "en": "Change, mirage and ownership",
+        "de": "Veränderung, Scheingewinne und Verantwortung"
+      }
+    },
+    {
+      "id": "close",
+      "title": {
+        "en": "Close and data request",
+        "de": "Abschluss und Datenanfrage"
+      }
+    }
+  ],
+  "questions": [
+    {
+      "id": "goal-1",
+      "section": "goal",
+      "domain": null,
+      "en": "What is the company trying to achieve? How do you know you're getting closer?",
+      "de": "Was will das Unternehmen erreichen? Woran merken Sie, dass Sie näher kommen?",
+      "capture": [
+        "goal statement"
+      ],
+      "why": {
+        "en": "Defines the goal and the unit of throughput.",
+        "de": "Legt Ziel und Durchsatz-Einheit fest."
+      }
+    },
+    {
+      "id": "goal-2",
+      "section": "goal",
+      "domain": null,
+      "en": "What is one 'unit' of business for you: an order, a project, a client, a contract?",
+      "de": "Was ist für Sie eine 'Einheit' Geschäft: ein Auftrag, ein Projekt, ein Kunde, ein Vertrag?",
+      "capture": [
+        "unit of throughput"
+      ],
+      "why": {
+        "en": "",
+        "de": ""
+      }
+    },
+    {
+      "id": "goal-3",
+      "section": "goal",
+      "domain": null,
+      "en": "What do you measure today? What earns bonuses, and what gets someone in trouble?",
+      "de": "Was messen Sie heute? Wofür gibt es Boni, und wofür gibt es Ärger?",
+      "capture": [
+        "KPIs",
+        "incentives"
+      ],
+      "why": {
+        "en": "Incentives reveal local optima (brief §8.3).",
+        "de": "Anreize zeigen lokale Optima (Brief §8.3)."
+      }
+    },
+    {
+      "id": "race-r",
+      "section": "race",
+      "domain": "RACE-R",
+      "en": "How many people see your offer each week or month? Through which channels, and at what spend?",
+      "de": "Wie viele Menschen sehen Ihr Angebot pro Woche oder Monat? Über welche Kanäle, mit welchem Budget?",
+      "capture": [
+        "visitors/impressions per period",
+        "ad spend",
+        "channels"
+      ],
+      "why": {
+        "en": "",
+        "de": ""
+      }
+    },
+    {
+      "id": "race-a",
+      "section": "race",
+      "domain": "RACE-A",
+      "en": "How many enquiries or leads come in per week? How fast does someone answer the first one, typically?",
+      "de": "Wie viele Anfragen oder Leads kommen pro Woche rein? Wie schnell antwortet typischerweise jemand auf die erste?",
+      "capture": [
+        "leads per week",
+        "speed-to-lead",
+        "booked rate"
+      ],
+      "why": {
+        "en": "A firehose answered in days means response speed, not lead volume, is the problem.",
+        "de": "Viele Anfragen, aber Antwort nach Tagen: dann ist die Reaktionszeit das Problem, nicht die Menge."
+      }
+    },
+    {
+      "id": "race-c",
+      "section": "race",
+      "domain": "RACE-C",
+      "en": "Of those, how many turn into paying customers? How long does that take, and where do deals stall?",
+      "de": "Wie viele davon werden zahlende Kunden? Wie lange dauert das, und wo bleiben Abschlüsse hängen?",
+      "capture": [
+        "close rate",
+        "sales-cycle length",
+        "stall points"
+      ],
+      "why": {
+        "en": "",
+        "de": ""
+      }
+    },
+    {
+      "id": "race-e",
+      "section": "race",
+      "domain": "RACE-E",
+      "en": "How many customers buy again, renew, or refer others? How many leave per year?",
+      "de": "Wie viele Kunden kaufen wieder, verlängern oder empfehlen weiter? Wie viele gehen pro Jahr?",
+      "capture": [
+        "repeat/renewal rate",
+        "churn",
+        "referrals"
+      ],
+      "why": {
+        "en": "",
+        "de": ""
+      }
+    },
+    {
+      "id": "be-fulfillment",
+      "section": "backend",
+      "domain": "fulfillment",
+      "en": "Once something is sold: how many orders or projects are in progress, and how many are late?",
+      "de": "Wenn etwas verkauft ist: Wie viele Aufträge oder Projekte laufen gerade, und wie viele sind verspätet?",
+      "capture": [
+        "orders in progress",
+        "on-time rate",
+        "lead time"
+      ],
+      "why": {
+        "en": "",
+        "de": ""
+      }
+    },
+    {
+      "id": "be-ops",
+      "section": "backend",
+      "domain": "ops",
+      "en": "Which team or machine is always busiest? Is there a queue in front of it?",
+      "de": "Welches Team oder welche Maschine ist immer am vollsten? Staut sich davor Arbeit?",
+      "capture": [
+        "utilization",
+        "queue"
+      ],
+      "why": {
+        "en": "",
+        "de": ""
+      }
+    },
+    {
+      "id": "be-support",
+      "section": "backend",
+      "domain": "support",
+      "en": "How many support requests per week? How long until the first answer and until it's solved?",
+      "de": "Wie viele Support-Anfragen pro Woche? Wie lange bis zur ersten Antwort und bis zur Lösung?",
+      "capture": [
+        "tickets per week",
+        "first response",
+        "resolution time",
+        "backlog"
+      ],
+      "why": {
+        "en": "",
+        "de": ""
+      }
+    },
+    {
+      "id": "be-finance",
+      "section": "backend",
+      "domain": "finance",
+      "en": "How long from finished work to invoice, and from invoice to cash? What waits for approval?",
+      "de": "Wie lange von erledigter Arbeit bis zur Rechnung, und von der Rechnung bis zum Geld? Was wartet auf Freigabe?",
+      "capture": [
+        "invoice lag",
+        "DSO",
+        "approval waits"
+      ],
+      "why": {
+        "en": "",
+        "de": ""
+      }
+    },
+    {
+      "id": "be-hr",
+      "section": "backend",
+      "domain": "hr",
+      "en": "Are critical roles open? How long does hiring and onboarding take?",
+      "de": "Sind wichtige Stellen offen? Wie lange dauern Einstellung und Einarbeitung?",
+      "capture": [
+        "open critical roles",
+        "time to hire"
+      ],
+      "why": {
+        "en": "",
+        "de": ""
+      }
+    },
+    {
+      "id": "be-procurement",
+      "section": "backend",
+      "domain": "procurement",
+      "en": "Do you run out of materials or wait on suppliers?",
+      "de": "Fehlt Ihnen Material, oder warten Sie auf Lieferanten?",
+      "capture": [
+        "stockouts",
+        "supplier lead time"
+      ],
+      "why": {
+        "en": "",
+        "de": ""
+      }
+    },
+    {
+      "id": "be-product",
+      "section": "backend",
+      "domain": "product",
+      "en": "If you build software or products: what waits for review, testing or release?",
+      "de": "Falls Sie Software oder Produkte entwickeln: Was wartet auf Review, Test oder Release?",
+      "capture": [
+        "release queue",
+        "review wait"
+      ],
+      "why": {
+        "en": "",
+        "de": ""
+      }
+    },
+    {
+      "id": "be-it",
+      "section": "backend",
+      "domain": "it",
+      "en": "Where do people copy data by hand between systems? How many hours a week?",
+      "de": "Wo übertragen Leute Daten von Hand zwischen Systemen? Wie viele Stunden pro Woche?",
+      "capture": [
+        "manual data hours",
+        "broken integrations"
+      ],
+      "why": {
+        "en": "",
+        "de": ""
+      }
+    },
+    {
+      "id": "be-legal",
+      "section": "backend",
+      "domain": "legal",
+      "en": "What waits for legal, compliance or contract review?",
+      "de": "Was wartet auf Rechts-, Compliance- oder Vertragsprüfung?",
+      "capture": [
+        "review queue"
+      ],
+      "why": {
+        "en": "",
+        "de": ""
+      }
+    },
+    {
+      "id": "be-mgmt",
+      "section": "backend",
+      "domain": "mgmt",
+      "en": "Which decisions only you (or one key person) can make? How long do they wait?",
+      "de": "Welche Entscheidungen können nur Sie (oder eine Schlüsselperson) treffen? Wie lange warten die?",
+      "capture": [
+        "decisions waiting on owner",
+        "approval wait"
+      ],
+      "why": {
+        "en": "",
+        "de": ""
+      }
+    },
+    {
+      "id": "flow-1",
+      "section": "flow",
+      "domain": null,
+      "en": "Walk me through one recent order or case from the very first contact until the money is in. Where did it wait, and for what?",
+      "de": "Gehen Sie mit mir einen aktuellen Auftrag durch, vom ersten Kontakt bis das Geld da ist. Wo hat er gewartet, und worauf?",
+      "capture": [
+        "steps",
+        "who",
+        "durations",
+        "waits"
+      ],
+      "why": {
+        "en": "Elapsed time is mostly waiting; find where.",
+        "de": "Durchlaufzeit ist meist Wartezeit; finden, wo."
+      }
+    },
+    {
+      "id": "pain-1",
+      "section": "pain",
+      "domain": null,
+      "en": "What do you expedite? Who do you chase? What is always late?",
+      "de": "Was müssen Sie beschleunigen? Wem laufen Sie hinterher? Was ist immer zu spät?",
+      "capture": [
+        "expedite signals"
+      ],
+      "why": {
+        "en": "",
+        "de": ""
+      }
+    },
+    {
+      "id": "pain-2",
+      "section": "pain",
+      "domain": null,
+      "en": "If this person or system took a day off, what would stop? Where does work pile up?",
+      "de": "Wenn diese Person oder dieses System einen Tag fehlt: Was steht dann still? Wo stapelt sich Arbeit?",
+      "capture": [
+        "absence test",
+        "queues"
+      ],
+      "why": {
+        "en": "Absence test for constraint confirmation (§8.2).",
+        "de": "Abwesenheits-Test zur Engpass-Bestätigung (§8.2)."
+      }
+    },
+    {
+      "id": "policy-1",
+      "section": "policy",
+      "domain": null,
+      "en": "Why is this done weekly, or in batches? Why does this need a sign-off? What would happen without it?",
+      "de": "Warum passiert das wöchentlich oder gesammelt? Warum braucht das eine Freigabe? Was wäre ohne?",
+      "capture": [
+        "batch rules",
+        "approvals"
+      ],
+      "why": {
+        "en": "Policies can be the constraint (§2.2).",
+        "de": "Regeln können der Engpass sein (§2.2)."
+      }
+    },
+    {
+      "id": "change-1",
+      "section": "change",
+      "domain": null,
+      "en": "If you could change one thing, what would it be, to what, and how would you make it happen?",
+      "de": "Wenn Sie eine Sache ändern könnten: welche, wohin, und wie würden Sie es umsetzen?",
+      "capture": [
+        "client proposal"
+      ],
+      "why": {
+        "en": "",
+        "de": ""
+      }
+    },
+    {
+      "id": "change-2",
+      "section": "change",
+      "domain": null,
+      "en": "What would you do with an extra hour of this person's time, versus that person's?",
+      "de": "Was würden Sie mit einer zusätzlichen Stunde dieser Person machen, im Vergleich zu jener Person?",
+      "capture": [
+        "mirage probe"
+      ],
+      "why": {
+        "en": "Hours saved off the constraint are a mirage (§8.6).",
+        "de": "Gesparte Stunden außerhalb des Engpasses sind Scheingewinne (§8.6)."
+      }
+    },
+    {
+      "id": "change-3",
+      "section": "change",
+      "domain": null,
+      "en": "Who would own a new system or process after we leave?",
+      "de": "Wer wäre für ein neues System oder einen neuen Prozess verantwortlich, wenn wir weg sind?",
+      "capture": [
+        "owner"
+      ],
+      "why": {
+        "en": "",
+        "de": ""
+      }
+    },
+    {
+      "id": "close-1",
+      "section": "close",
+      "domain": null,
+      "en": "Can you send exports: CRM deals and activities, orders with status history, tickets, invoices, ad reports? Any format is fine.",
+      "de": "Können Sie uns Exporte schicken: CRM-Deals und Aktivitäten, Aufträge mit Statusverlauf, Tickets, Rechnungen, Werbeberichte? Jedes Format ist ok.",
+      "capture": [
+        "data request"
+      ],
+      "why": {
+        "en": "Interview numbers are hypotheses until checked against data.",
+        "de": "Zahlen aus dem Gespräch sind Hypothesen, bis Daten sie bestätigen."
+      }
+    }
+  ],
+  "note": {
+    "en": "Ask for numbers at each stage, or ask around numbers ('more or less than 50?'). Choose the problem that hurts, not the one that sounds impressive.",
+    "de": "Fragen Sie in jeder Stufe nach Zahlen, oder grenzen Sie ein ('mehr oder weniger als 50?'). Wählen Sie das Problem, das weh tut, nicht das, das beeindruckend klingt."
+  }
+}

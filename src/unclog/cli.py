@@ -1,4 +1,4 @@
-"""Command line: ``unclog ingest <client_id> <folder>`` and ``unclog sources <client_id>``."""
+"""Command line for the Unclog pipeline. Run ``unclog --help`` for commands."""
 
 from __future__ import annotations
 
@@ -32,6 +32,80 @@ def cmd_sources(args: argparse.Namespace) -> int:
             f"{sid}  {r.source.kind:<10} {r.source.title}  tables={len(r.tables)} "
             f"chunks={len(r.chunks)} event_logs={len(r.event_logs)} pii={r.pii_redactions}"
         )
+    return 0
+
+
+def make_llm(budget_usd: float | None = None):
+    """Default model client: Anthropic backend, disk cache, per-run budget. Patched in tests."""
+    from .llm import CostTracker, LLMClient
+    from .llm.backends import AnthropicBackend
+    from .llm.cache import DiskCache
+
+    return LLMClient(
+        AnthropicBackend(),
+        cost=CostTracker(budget_usd=budget_usd),
+        cache=DiskCache(os.environ.get("UNCLOG_LLM_CACHE", ".unclog-cache")),
+    )
+
+
+def cmd_call_plan(args: argparse.Namespace) -> int:
+    from .agents import build_call_plan
+
+    heat = report = None
+    if args.case:
+        from .evals.cases import load_case
+        from .evals.runner import run_case
+
+        res = run_case(load_case(args.case))
+        heat, report = res.heat, res.report
+    print(build_call_plan(args.lang, heat, report).to_markdown())
+    return 0
+
+
+def cmd_extract_call(args: argparse.Namespace) -> int:
+    from pathlib import Path
+
+    from .agents.transcript_extractor import extract_call, review_markdown
+
+    store = ClientStore(_root(args), args.client_id)
+    src = store.get_source(args.source_id)
+    llm = make_llm(args.budget)
+    run = extract_call(llm, src.chunks, src.source.id, lang=args.lang)
+    v = run.result
+    for m in v.metrics:
+        store.put(m, produced_by="transcript_extractor")
+    for p in v.policies:
+        store.put(p, produced_by="transcript_extractor")
+    out = Path(store.root) / "reviews"
+    out.mkdir(exist_ok=True)
+    sheet = out / f"{src.source.id}-extraction.md"
+    sheet.write_text(review_markdown(v, args.lang))
+    (out / f"{src.source.id}-extraction.json").write_text(v.extraction.model_dump_json(indent=2))
+    print(
+        f"{len(v.metrics)} numbers, {len(v.steps)} steps, {len(v.policies)} rules, "
+        f"{len(v.rejected)} rejected, {len(v.number_flags)} to check; prompt "
+        f"v{run.prompt_version}, {run.attempts} attempt(s), ${run.cost_usd:.4f}"
+    )
+    print(f"review sheet: {sheet}")
+    return 0
+
+
+def cmd_flow_from_log(args: argparse.Namespace) -> int:
+    from .flow.from_eventlog import flow_from_event_log
+
+    store = ClientStore(_root(args), args.client_id)
+    src = store.get_source(args.source_id)
+    if not src.event_logs:
+        print(f"{args.source_id}: no event log detected")
+        return 1
+    nodes, edges = flow_from_event_log(src.event_logs[0], args.domain, src.source.id)
+    p = {(e.source, e.target): e.probability for e in edges}
+    for i, n in enumerate(nodes):
+        nxt = nodes[i + 1].id if i + 1 < len(nodes) else None
+        wait = f"wait {n.wait_time_h:.0f} h" if n.wait_time_h is not None else ""
+        queue = f"queue {n.queue_length:g}" if n.queue_length else ""
+        share = f"-> {p[(n.id, nxt)]:.0%}" if nxt else ""
+        print(f"{n.id:<36} {wait:<14} {queue:<10} {share}")
     return 0
 
 
@@ -95,6 +169,24 @@ def main(argv: list[str] | None = None) -> int:
     pe = sub.add_parser("eval-cases", help="run synthetic cases and score diagnosis accuracy")
     pe.add_argument("root", nargs="?", default="evals/cases")
     pe.set_defaults(fn=cmd_eval_cases)
+
+    pc = sub.add_parser("call-plan", help="bilingual first-call plan for the consultant")
+    pc.add_argument("--lang", choices=["de", "en"], default="de")
+    pc.add_argument("--case", help="synthetic case dir to tailor follow-ups (else full script)")
+    pc.set_defaults(fn=cmd_call_plan)
+
+    px = sub.add_parser("extract-call", help="extract verified facts from an ingested transcript")
+    px.add_argument("client_id")
+    px.add_argument("source_id")
+    px.add_argument("--lang", choices=["de", "en"], default="de")
+    px.add_argument("--budget", type=float, default=2.0, help="max USD for this run")
+    px.set_defaults(fn=cmd_extract_call)
+
+    pf = sub.add_parser("flow-from-log", help="measured flow fragment from an ingested event log")
+    pf.add_argument("client_id")
+    pf.add_argument("source_id")
+    pf.add_argument("--domain", required=True)
+    pf.set_defaults(fn=cmd_flow_from_log)
 
     pm = sub.add_parser("simulate", help="run the standard what-if scenarios on a case")
     pm.add_argument("case_dir")

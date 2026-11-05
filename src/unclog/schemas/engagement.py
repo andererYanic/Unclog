@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import StrEnum
+from typing import Literal
 
 from pydantic import Field
 
@@ -42,6 +43,7 @@ class Engagement(UnclogModel):
     status: EngagementStatus = EngagementStatus.intake
     created: datetime
     non_profit: bool = False
+    language: Literal["de", "en"] = Field("de", description="language for questions and reports")
 
 
 class TIOE(UnclogModel):

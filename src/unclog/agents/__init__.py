@@ -1,3 +1,25 @@
-"""One module per agent (brief §12).
+"""Agents (brief §12). Human-led calls, agent-assisted (decision 007)."""
 
-Not yet implemented; see build plan (brief §19)."""
+from .base import AgentEscalation, AgentRun, Prompt, load_prompt, run_structured
+from .call_prep import CallPlan, build_call_plan, load_script
+from .flow_modeler import FlowDraft, FlowModel, build, model_flow
+from .transcript_extractor import TranscriptExtraction, VerifiedCall, extract_call, verify
+
+__all__ = [
+    "AgentEscalation",
+    "AgentRun",
+    "CallPlan",
+    "FlowDraft",
+    "FlowModel",
+    "Prompt",
+    "TranscriptExtraction",
+    "VerifiedCall",
+    "build",
+    "build_call_plan",
+    "extract_call",
+    "load_prompt",
+    "load_script",
+    "model_flow",
+    "run_structured",
+    "verify",
+]
