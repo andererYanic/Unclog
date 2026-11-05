@@ -57,15 +57,52 @@ class TestContext:
     event_logs: list[tuple[str, EventLogStats, str]]  # (domain, stats, source_id)
     activity_nodes: dict[str, str]  # event-log activity -> node id
     texts: list[TextItem]
+    sim_replications: int = 0  # >0: relief test by simulation (G9) instead of static math
+    sim_horizon_weeks: float = 16
 
 
 TestResult = tuple[ConfirmationTest, list[Evidence]] | None
+
+
+def _sim_relief(c: Candidate, ctx: TestContext) -> TestResult:
+    from ..simulation import Scenario, simulate  # local import: simulation depends on flow only
+
+    if c.type is ConstraintType.physical:
+        relief = Scenario(f"relief +10% {c.target}", capacity={c.target: RELIEF_FACTOR})
+        what = f"+{RELIEF_FACTOR - 1:.0%} capacity at {c.target}"
+    elif c.type is ConstraintType.market:
+        relief = Scenario("relief +10% demand", arrival_scale=RELIEF_FACTOR)
+        what = f"+{RELIEF_FACTOR - 1:.0%} demand"
+    else:
+        return None
+    kw = {
+        "replications": ctx.sim_replications,
+        "horizon_weeks": ctx.sim_horizon_weeks,
+        "warmup_weeks": 2,
+    }
+    base = simulate(ctx.graph, **kw)
+    after = simulate(ctx.graph, relief, **kw)
+    gain = (after.throughput.mean or 0) / max(base.throughput.mean or 1e-9, 1e-9) - 1
+    # Significant: the relief scenario's 5th percentile beats the baseline mean.
+    passed = gain > 0.02 and (after.throughput.p05 or 0) > (base.throughput.mean or 0)
+    note = (
+        f"simulated {what}: throughput {base.throughput.fmt('/wk')} -> "
+        f"{after.throughput.fmt('/wk')} ({gain:+.1%}, {ctx.sim_replications} replications)"
+    )
+    ev = Evidence(
+        id=_eid("simrelief"), source_id=DERIVED_SOURCE.id, type=EvidenceType.simulation, note=note
+    )
+    return ConfirmationTest(kind=TestKind.relief, passed=passed, evidence_ids=[ev.id], note=note), [
+        ev
+    ]
 
 
 def relief_test(c: Candidate, ctx: TestContext) -> TestResult:
     g = ctx.graph
     if g is None:
         return None
+    if ctx.sim_replications > 0:
+        return _sim_relief(c, ctx)
     before = g.effective_throughput()
     if c.type is ConstraintType.physical:
         after = g.with_capacity_scale(c.target, RELIEF_FACTOR).effective_throughput()

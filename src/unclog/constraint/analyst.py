@@ -422,12 +422,16 @@ def identify(
     event_logs: list[tuple[str, EventLogStats, str]] = (),
     texts: list[TextItem] = (),
     activity_nodes: dict[str, str] | None = None,
+    sim_replications: int = 0,
 ) -> ConstraintReport:
+    """``sim_replications > 0`` runs the relief test as a simulation (G9-grade evidence)."""
     texts = list(texts) + _quotes_from_graph(graph)
     pa = audit(graph, texts)
     cfg = heat.config
     cands, unresolved = _hypotheses(heat, graph, pa, cfg.util_candidate)
-    ctx = TestContext(graph, list(event_logs), activity_nodes or {}, texts)
+    ctx = TestContext(
+        graph, list(event_logs), activity_nodes or {}, texts, sim_replications=sim_replications
+    )
     for c in cands:
         for test in ALL_TESTS:
             res = test(c, ctx)

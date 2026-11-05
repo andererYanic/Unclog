@@ -45,6 +45,37 @@ def cmd_eval_cases(args: argparse.Namespace) -> int:
     return 0 if ok else 1
 
 
+def cmd_simulate(args: argparse.Namespace) -> int:
+    from .evals.cases import load_case
+    from .simulation import compare, standard_scenarios, to_markdown
+
+    case = load_case(args.case_dir)
+    graph = case.graph()
+    if graph is None:
+        print(f"{case.id}: no flow graph to simulate")
+        return 1
+    constraint = args.constraint or (b.resource_id if (b := graph.bottleneck()) else None)
+    scenarios = standard_scenarios(
+        graph,
+        constraint_resource=constraint,
+        gate_node=args.gate,
+        batch_node=args.batch_node,
+        demand_factor=args.demand,
+    )
+    print(
+        to_markdown(
+            compare(
+                graph,
+                scenarios,
+                replications=args.replications,
+                horizon_weeks=args.weeks,
+                seed=args.seed,
+            )
+        )
+    )
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(prog="unclog")
     p.add_argument("--clients-root", help="default: $UNCLOG_CLIENTS_ROOT or ./clients")
@@ -64,6 +95,17 @@ def main(argv: list[str] | None = None) -> int:
     pe = sub.add_parser("eval-cases", help="run synthetic cases and score diagnosis accuracy")
     pe.add_argument("root", nargs="?", default="evals/cases")
     pe.set_defaults(fn=cmd_eval_cases)
+
+    pm = sub.add_parser("simulate", help="run the standard what-if scenarios on a case")
+    pm.add_argument("case_dir")
+    pm.add_argument("--constraint", help="resource to elevate (default: busiest)")
+    pm.add_argument("--gate", help="node for the rope / release gate")
+    pm.add_argument("--batch-node", help="node whose batching to remove (exploit)")
+    pm.add_argument("--demand", type=float, default=1.3, help="demand factor for what-ifs")
+    pm.add_argument("--replications", type=int, default=10)
+    pm.add_argument("--weeks", type=float, default=26)
+    pm.add_argument("--seed", type=int, default=42)
+    pm.set_defaults(fn=cmd_simulate)
 
     args = p.parse_args(argv)
     return args.fn(args)
