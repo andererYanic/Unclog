@@ -273,7 +273,7 @@ def test_cli_monitoring_and_sync(tmp_path, monkeypatch, capsys):
     monkeypatch.setattr(
         cli,
         "make_llm",
-        lambda budget=None, cache=True, model=None: LLMClient(FakeBackend([json.dumps(SOP)])),
+        lambda budget=None, **kw: LLMClient(FakeBackend([json.dumps(SOP)])),
     )
     assert (
         cli.main(

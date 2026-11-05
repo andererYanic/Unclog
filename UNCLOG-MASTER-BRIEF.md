@@ -554,3 +554,11 @@ Ship a thin vertical slice first: one client-like case → baseline metrics → 
 - Brand/legal: is "Unclog" the final name (trademark and domain check)?
 
 When unsure, ask before assuming; log answers in `docs/decisions/`.
+
+**Answers so far** (details in `docs/decisions/`):
+- Data access: both file uploads and live connectors; uploads first (003).
+- Delivery: a human consultant runs client calls, agents assist; German and English (007).
+- Hosting/runner and operate vs. hand over: *provisional* default, platform-neutral packages,
+  hand over (012).
+- Still open: segment and industries, commercial model, benchmarks, weekly-sync attendance,
+  brand/legal (000).

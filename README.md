@@ -29,6 +29,10 @@ unclog ledger <client> show|add ...               # results ledger
 unclog buffers --orders open_orders.csv --buffer-h 168   # buffer penetration (green/yellow/red)
 unclog monitor --weeks weeks.json --constraint workshop --next designer   # constraint-shift alerts
 unclog sync <client> --pod P --logs l.jsonl --outcomes o.csv --skill task=1.0.0:SKILL.md --consent REF   # team sync
+unclog keygen <client> --keys-dir <vault>       # per-client encryption key (raw uploads)
+unclog policy <client> --raw-days 90 --max-usd 50   # retention + engagement budget
+unclog retention <client> [--apply]             # dry run by default
+unclog security-scan .                          # secrets in the tree (CI runs this)
 ```
 
 ## Status (build plan §19)
@@ -48,4 +52,4 @@ unclog sync <client> --pod P --logs l.jsonl --outcomes o.csv --skill task=1.0.0:
 - [x] 14. QA gates G1–G17, Critic, gated and resumable pipeline (checkpointed LLM phases, critic retry-then-escalate, human-review stop); deterministic evidence ids (decision 014)
 - [x] 15. Human review CLI: hash-bound approvals (edits make them stale), change requests, comments, phase re-run, gated go-live (G14/G15; external actions stay drafts unless explicitly allowed), release manifest (decision 015)
 - [x] 16. Weekly team sync (consent gate, salted pseudonyms incl. names in text, pod-size floor, no individual ranking by default, skill diff proposals) and monitoring (results ledger, buffer zones, constraint-shift alerts) (decision 016)
-- [ ] 17. Hardening (security, retention, audit, cost budgets); industry and back-end playbooks
+- [x] 17. Hardening: encryption at rest for raw uploads, read and model-call audit, retention policy, persistent engagement budgets, secrets scan in CI; TOC/RACE/back-end/industry/regulatory playbooks (decision 017)

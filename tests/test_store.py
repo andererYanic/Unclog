@@ -57,7 +57,7 @@ def test_sources_dedupe_and_audit(tmp_path):
     assert s.put_source(r, actor="intake") is False
     assert s.get_source(r.source.id).tables[0].rows[0]["Lead ID"] == "L-1001"
     actions = [e["action"] for e in s.audit_log()]
-    assert actions == ["put_source", "put_source"]
+    assert actions == ["put_source", "put_source", "read_source"]  # reads are audited too
 
 
 def test_delete_client_removes_everything(tmp_path, ev):

@@ -363,7 +363,9 @@ def test_cli_extract_call_and_flow_from_log(tmp_path, monkeypatch, capsys):
     store = ClientStore(root, "acme")
     sources = {store.get_source(s).source.title: s for s in store.list_sources()}
     monkeypatch.setattr(
-        cli, "make_llm", lambda budget=None: LLMClient(FakeBackend([json.dumps(good_extraction())]))
+        cli,
+        "make_llm",
+        lambda budget=None, **kw: LLMClient(FakeBackend([json.dumps(good_extraction())])),
     )
     # the fake extraction's locators match this transcript
     assert cli.main(["--clients-root", str(root), "extract-call", "acme", sources["call.vtt"]]) == 0

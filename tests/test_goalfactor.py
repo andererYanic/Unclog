@@ -219,7 +219,7 @@ def test_factor_goal_escalates():
 
 def test_cli_goal_tree(monkeypatch, capsys):
     monkeypatch.setattr(
-        cli, "make_llm", lambda budget=None: LLMClient(FakeBackend([json.dumps(GOOD)]))
+        cli, "make_llm", lambda budget=None, **kw: LLMClient(FakeBackend([json.dumps(GOOD)]))
     )
     assert (
         cli.main(

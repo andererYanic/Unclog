@@ -2,6 +2,8 @@ import pytest
 
 from unclog.ingestion.pii import scrub
 
+FAKE_KEY = "key sk-ant-abcdefghijklmnop1234"  # secret-scan: allow (fake key)
+
 
 @pytest.mark.parametrize(
     "text,label",
@@ -13,7 +15,7 @@ from unclog.ingestion.pii import scrub
         ("IBAN DE89 3704 0044 0532 0130 00", "[IBAN]"),
         ("Card 4111 1111 1111 1111", "[CARD]"),
         ("api_key=abc123xyz", "[SECRET]"),
-        ("key sk-ant-abcdefghijklmnop1234", "[SECRET]"),
+        (FAKE_KEY, "[SECRET]"),
     ],
 )
 def test_redacts(text, label):

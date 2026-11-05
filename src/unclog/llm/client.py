@@ -32,6 +32,7 @@ class LLMClient:
         cache: ResponseCache | None = None,
         max_validation_retries: int = 2,
         default_model: str | None = None,
+        on_call=None,
     ) -> None:
         self.backend = backend
         self.cost = cost or CostTracker()
@@ -39,12 +40,17 @@ class LLMClient:
         self.max_validation_retries = max_validation_retries
         # Routing / model-change evals: replaces the default model where the caller didn't pick.
         self.default_model = default_model
+        # Audit hook: called with (request, response) after every call, cached or not (§14).
+        self.on_call = on_call
 
     def complete(self, request: LLMRequest) -> LLMResponse:
         if self.default_model and request.model == DEFAULT_MODEL:
             request = request.model_copy(update={"model": self.default_model})
         if self.cache is not None and (hit := self.cache.get(request)) is not None:
-            return hit.model_copy(update={"from_cache": True})
+            hit = hit.model_copy(update={"from_cache": True})
+            if self.on_call:
+                self.on_call(request, hit)
+            return hit
         self.cost.check()
         response = self.backend.complete(request)
         # Price by the requested model; a server-side fallback may bill differently.
@@ -53,6 +59,8 @@ class LLMClient:
         self.cost.record(request.agent, usd)
         if self.cache is not None:
             self.cache.put(request, response)
+        if self.on_call:
+            self.on_call(request, response)
         return response
 
     def structured(self, request: LLMRequest, schema: type[T]) -> T:

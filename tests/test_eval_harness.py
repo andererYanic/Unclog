@@ -244,9 +244,7 @@ def test_cli_eval_agent_compare_and_rate(tmp_path, monkeypatch, capsys):
     monkeypatch.setattr(
         cli,
         "make_llm",
-        lambda budget=None, cache=True, model=None: LLMClient(
-            FakeBackend(lambda req: json.dumps(tree))
-        ),
+        lambda budget=None, **kw: LLMClient(FakeBackend(lambda req: json.dumps(tree))),
     )
     root = tmp_path / "agents"
     (root / "goal_factoring").mkdir(parents=True)

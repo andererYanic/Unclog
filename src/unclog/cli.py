@@ -35,23 +35,34 @@ def cmd_sources(args: argparse.Namespace) -> int:
     return 0
 
 
-def make_llm(budget_usd: float | None = None, cache: bool = True, model: str | None = None):
-    """Default model client: Anthropic backend, disk cache, per-run budget. Patched in tests.
+def make_llm(
+    budget_usd: float | None = None,
+    cache: bool = True,
+    model: str | None = None,
+    store: ClientStore | None = None,
+):
+    """Default model client: Anthropic backend, disk cache, run budget. Patched in tests.
 
-    ``cache=False`` for evals (replicates must be independent samples).
+    ``cache=False`` for evals (replicates must be independent samples). With a client
+    ``store``, spend is persisted against the client's engagement budget and every model call
+    is written to the client's audit log (brief §14, §17).
     """
     from .llm import CostTracker, LLMClient
     from .llm.backends import AnthropicBackend
     from .llm.cache import DiskCache
 
-    client = LLMClient(
+    cost, hook = CostTracker(budget_usd=budget_usd), None
+    if store is not None:
+        from .store.governance import EngagementBudget, audit_hook
+
+        cost, hook = EngagementBudget(store, budget_usd), audit_hook(store)
+    return LLMClient(
         AnthropicBackend(),
-        cost=CostTracker(budget_usd=budget_usd),
+        cost=cost,
         cache=DiskCache(os.environ.get("UNCLOG_LLM_CACHE", ".unclog-cache")) if cache else None,
+        default_model=model,
+        on_call=hook,
     )
-    if model:
-        client.default_model = model
-    return client
 
 
 def cmd_call_plan(args: argparse.Namespace) -> int:
@@ -75,7 +86,7 @@ def cmd_extract_call(args: argparse.Namespace) -> int:
 
     store = ClientStore(_root(args), args.client_id)
     src = store.get_source(args.source_id)
-    llm = make_llm(args.budget)
+    llm = make_llm(args.budget, store=store)
     run = extract_call(llm, src.chunks, src.source.id, lang=args.lang)
     v = run.result
     for m in v.metrics:
@@ -274,7 +285,7 @@ def cmd_run_system(args: argparse.Namespace) -> int:
     config = json.loads((folder / "config.json").read_text())
     tpl = TEMPLATES[routine["template"]]
     record = json.loads(Path(args.input).read_text())
-    llm = make_llm(args.budget) if tpl.uses_ai else None
+    llm = make_llm(args.budget, store=store) if tpl.uses_ai else None
     out = tpl.run(record, config, llm=llm, lang=args.lang)
     run_dir = folder / "runs" / datetime.now(UTC).strftime("%Y%m%dT%H%M%S%f")
     run_dir.mkdir(parents=True)
@@ -366,7 +377,7 @@ def cmd_pipeline(args: argparse.Namespace) -> int:
 
     case = load_case(args.case)
     store = ClientStore(_root(args), args.client_id) if args.client_id else None
-    factory = (lambda: make_llm(args.budget)) if args.with_agents else None
+    factory = (lambda: make_llm(args.budget, store=store)) if args.with_agents else None
     run = run_pipeline(case, lang=args.lang, llm_factory=factory, store=store, out_dir=args.out)
     print(f"status: {run.status}\nreason: {run.reason}")
     for h in run.human_review:
@@ -502,7 +513,7 @@ def cmd_sync(args: argparse.Namespace) -> int:
         consent_ref=args.consent, salt=salt, share_individual_ranking=args.share_ranking
     )
     res = run_sync(
-        make_llm(args.budget),
+        make_llm(args.budget, store=store),
         args.pod,
         logs,
         outcomes,
@@ -521,6 +532,53 @@ def cmd_sync(args: argparse.Namespace) -> int:
     print(res.pod_report)
     print(f"\nproposals (approve before pushing to the team): {out}")
     return 0
+
+
+def cmd_keygen(args: argparse.Namespace) -> int:
+    from .store.crypto import generate_key_file
+
+    keys = args.keys_dir or os.environ.get("UNCLOG_KEYS_DIR")
+    if not keys:
+        print("set --keys-dir or UNCLOG_KEYS_DIR (outside the repository)")
+        return 2
+    path = generate_key_file(args.client_id, keys)
+    print(f"key written to {path} (0600). Keep it in the client's vault; never commit it.")
+    return 0
+
+
+def cmd_policy(args: argparse.Namespace) -> int:
+    from .store.governance import ClientPolicy
+
+    store = ClientStore(_root(args), args.client_id)
+    pol = ClientPolicy.load(store)
+    for k in ("raw_days", "derived_days", "max_usd"):
+        v = getattr(args, k)
+        if v is not None:
+            setattr(pol, k, v)
+    if any(getattr(args, k) is not None for k in ("raw_days", "derived_days", "max_usd")):
+        pol.save(store, args.actor)
+    print(json.dumps(vars(pol), indent=2))
+    return 0
+
+
+def cmd_retention(args: argparse.Namespace) -> int:
+    from .store.governance import apply_retention
+
+    store = ClientStore(_root(args), args.client_id)
+    files = apply_retention(store, args.actor, dry_run=not args.apply)
+    verb = "deleted" if args.apply else "would delete"
+    print(f"{verb} {len(files)} file(s)" + "".join(f"\n- {f}" for f in files))
+    return 0
+
+
+def cmd_security_scan(args: argparse.Namespace) -> int:
+    from .qa.security import scan
+
+    found = scan(args.path)
+    for f in found:
+        print(f"{f.path}:{f.line}: {f.kind}")
+    print("clean" if not found else f"{len(found)} finding(s)")
+    return 1 if found else 0
 
 
 def cmd_eval_cases(args: argparse.Namespace) -> int:
@@ -763,6 +821,29 @@ def main(argv: list[str] | None = None) -> int:
     psy.add_argument("--lang", choices=["de", "en"], default="de")
     psy.add_argument("--budget", type=float, default=2.0)
     psy.set_defaults(fn=cmd_sync)
+
+    pkg = sub.add_parser("keygen", help="create a per-client encryption key file (0600)")
+    pkg.add_argument("client_id")
+    pkg.add_argument("--keys-dir")
+    pkg.set_defaults(fn=cmd_keygen)
+
+    ppo = sub.add_parser("policy", help="show/set client retention and budget policy")
+    ppo.add_argument("client_id")
+    ppo.add_argument("--raw-days", type=int)
+    ppo.add_argument("--derived-days", type=int)
+    ppo.add_argument("--max-usd", type=float)
+    ppo.add_argument("--actor", default=os.environ.get("USER", "admin"))
+    ppo.set_defaults(fn=cmd_policy)
+
+    pre = sub.add_parser("retention", help="apply the retention policy (dry run by default)")
+    pre.add_argument("client_id")
+    pre.add_argument("--apply", action="store_true")
+    pre.add_argument("--actor", default=os.environ.get("USER", "admin"))
+    pre.set_defaults(fn=cmd_retention)
+
+    psc = sub.add_parser("security-scan", help="scan a tree for secrets")
+    psc.add_argument("path", nargs="?", default=".")
+    psc.set_defaults(fn=cmd_security_scan)
 
     pm = sub.add_parser("simulate", help="run the standard what-if scenarios on a case")
     pm.add_argument("case_dir")

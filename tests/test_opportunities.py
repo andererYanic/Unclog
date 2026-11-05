@@ -279,7 +279,7 @@ def test_cli_opportunities(monkeypatch, capsys):
     monkeypatch.setattr(
         cli,
         "make_llm",
-        lambda budget=None: LLMClient(FakeBackend([json.dumps(tree), json.dumps(opps)])),
+        lambda budget=None, **kw: LLMClient(FakeBackend([json.dumps(tree), json.dumps(opps)])),
     )
     assert (
         cli.main(["opportunities", "--case", str(CASES / "hidden_policy_approval"), "--lang", "en"])

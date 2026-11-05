@@ -45,6 +45,7 @@ BRIEF = {
     "flags": [{"kind": "margin", "detail": "margin_pct=14 < 18", "severity": "check"}],
     "missing_info": ["Aufmaß"],
 }
+FAKE_TOKEN = "token=abc123def456"  # secret-scan: allow (fake, for the G15 test)
 STL_CONFIG = {
     "email_connector": "fake_mail",
     "guidelines": "Freundlich, Du-Form vermeiden",
@@ -168,7 +169,7 @@ def test_g15_passes_when_complete_and_catches_secrets(tmp_path):
     assert issues == []
     leaky = spec(
         system_id="leaky",
-        config={**STL_CONFIG, "api": "token=abc123def456"},
+        config={**STL_CONFIG, "api": FAKE_TOKEN},
         eval_report="r.json",
         owner_trained=True,
         client_owned_accounts=True,
@@ -231,7 +232,7 @@ def test_cli_package_run_and_outbox(tmp_path, monkeypatch, capsys):
     monkeypatch.setattr(
         cli,
         "make_llm",
-        lambda budget=None, cache=True, model=None: LLMClient(FakeBackend([json.dumps(REPLY)])),
+        lambda budget=None, **kw: LLMClient(FakeBackend([json.dumps(REPLY)])),
     )
     rec = tmp_path / "lead.json"
     rec.write_text(json.dumps({"id": "L-9", "email": "k@kunde.de", "message": "Angebot?"}))

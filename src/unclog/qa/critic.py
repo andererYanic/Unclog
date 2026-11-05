@@ -5,9 +5,13 @@ findings stop the pipeline. Two blocks in a row on the same phase escalate to a 
 
 from __future__ import annotations
 
-from ..orchestrator.state import State
+from typing import TYPE_CHECKING
+
 from ..schemas.common import Evidence, EvidenceType
 from ..schemas.design import Finding, FindingSeverity, Priority
+
+if TYPE_CHECKING:  # avoid qa <-> orchestrator import cycle
+    from ..orchestrator.state import State
 
 
 def _f(i: int, phase: int, text: str, sev: FindingSeverity, gate: str | None = None) -> Finding:

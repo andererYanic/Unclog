@@ -60,13 +60,35 @@ class ClientStore:
 
     # ---- raw uploads -----------------------------------------------------------------------
     def put_raw(self, data: bytes, sha256: str, filename: str, actor: str) -> Path:
+        """Store the original upload, encrypted when a client key exists (brief §14)."""
+        from .crypto import EncryptionRequired, client_key, encrypt, required
+
         ext = Path(filename).suffix.lower()
-        path = self.root / "raw" / f"{_safe(sha256, 'hash')}{ext}"
+        key = client_key(self.client_id)
+        if key is None and required():
+            raise EncryptionRequired(f"no encryption key for client {self.client_id}")
+        name = f"{_safe(sha256, 'hash')}{ext}" + (".enc" if key else "")
+        path = self.root / "raw" / name
         if not path.exists():
-            path.write_bytes(data)
+            path.write_bytes(encrypt(data, key) if key else data)
             path.chmod(0o440)
-        self._audit("put_raw", actor, sha256=sha256, filename=Path(filename).name)
+        self._audit(
+            "put_raw", actor, sha256=sha256, filename=Path(filename).name, encrypted=key is not None
+        )
         return path
+
+    def get_raw(self, sha256: str, ext: str, actor: str) -> bytes:
+        from .crypto import client_key, decrypt
+
+        base = self.root / "raw" / f"{_safe(sha256, 'hash')}{ext.lower()}"
+        enc = base.with_name(base.name + ".enc")
+        self._audit("read_raw", actor, sha256=sha256)
+        if enc.exists():
+            key = client_key(self.client_id)
+            if key is None:
+                raise PermissionError(f"raw file is encrypted; key for {self.client_id} missing")
+            return decrypt(enc.read_bytes(), key)
+        return base.read_bytes()
 
     # ---- sources ---------------------------------------------------------------------------
     def put_source(self, result: IngestResult, actor: str) -> bool:
@@ -78,8 +100,9 @@ class ClientStore:
         self._audit("put_source", actor, source_id=result.source.id, duplicate=existed)
         return not existed
 
-    def get_source(self, source_id: str) -> IngestResult:
+    def get_source(self, source_id: str, actor: str = "system") -> IngestResult:
         path = self.root / "sources" / f"{_safe(source_id, 'source id')}.json"
+        self._audit("read_source", actor, source_id=source_id)  # data access is audited (§14)
         return IngestResult.model_validate_json(path.read_text())
 
     def list_sources(self) -> list[str]:

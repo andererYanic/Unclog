@@ -10,17 +10,20 @@ from __future__ import annotations
 import re
 from collections.abc import Callable
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING
 
 from pydantic import ValidationError
 
 from ..deploy import check_g13
 from ..evals.agents import RUBRICS
 from ..evals.harness import gate_g14
-from ..orchestrator.state import State
 from ..schemas.common import Grounded
 from ..schemas.delivery import EvalCase, EvalSuite
 from ..schemas.design import Position, Priority
 from ..schemas.diagnosis import ConstraintStatus
+
+if TYPE_CHECKING:  # avoid qa <-> orchestrator import cycle
+    from ..orchestrator.state import State
 
 NA, PASS, FAIL = "n/a", "pass", "fail"
 
