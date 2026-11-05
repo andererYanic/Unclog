@@ -25,6 +25,10 @@ unclog outbox <client> list|show|approve|reject [id]      # human approval of dr
 unclog report --case <dir> --out <dir> --lang de [--with-agents]   # deliverables package (drafts for review)
 unclog pipeline --case <dir> --out <dir> [--client-id X] [--with-agents]   # gated, resumable end-to-end run
 unclog review <client> status|approve|request-changes|comment|rerun|go-live|release <target>   # human review (§16)
+unclog ledger <client> show|add ...               # results ledger
+unclog buffers --orders open_orders.csv --buffer-h 168   # buffer penetration (green/yellow/red)
+unclog monitor --weeks weeks.json --constraint workshop --next designer   # constraint-shift alerts
+unclog sync <client> --pod P --logs l.jsonl --outcomes o.csv --skill task=1.0.0:SKILL.md --consent REF   # team sync
 ```
 
 ## Status (build plan §19)
@@ -43,4 +47,5 @@ unclog review <client> status|approve|request-changes|comment|rerun|go-live|rele
 - [x] 13. Roadmap Planner (waves, DBR by constraint type, KPIs, re-baseline triggers) and Report Writer (bilingual Jinja deliverables, value workbook, risk register, JSON export; all marked draft for review) (decision 013)
 - [x] 14. QA gates G1–G17, Critic, gated and resumable pipeline (checkpointed LLM phases, critic retry-then-escalate, human-review stop); deterministic evidence ids (decision 014)
 - [x] 15. Human review CLI: hash-bound approvals (edits make them stale), change requests, comments, phase re-run, gated go-live (G14/G15; external actions stay drafts unless explicitly allowed), release manifest (decision 015)
-- [ ] 16–17. See brief
+- [x] 16. Weekly team sync (consent gate, salted pseudonyms incl. names in text, pod-size floor, no individual ranking by default, skill diff proposals) and monitoring (results ledger, buffer zones, constraint-shift alerts) (decision 016)
+- [ ] 17. Hardening (security, retention, audit, cost budgets); industry and back-end playbooks

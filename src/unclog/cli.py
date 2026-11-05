@@ -425,6 +425,104 @@ def cmd_review(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_ledger(args: argparse.Namespace) -> int:
+    from datetime import date
+
+    from .monitoring import Ledger
+
+    led = Ledger(ClientStore(_root(args), args.client_id))
+    if args.action == "add":
+        led.record(
+            args.metric,
+            args.baseline,
+            args.current,
+            date.fromisoformat(args.baseline_date),
+            date.fromisoformat(args.date),
+            leading=not args.lagging,
+            actor=args.actor,
+            lag_note=args.lag_note,
+            lang=args.lang,
+        )
+    print(led.to_markdown(args.lang))
+    return 0
+
+
+def cmd_buffers(args: argparse.Namespace) -> int:
+    import csv
+    from datetime import datetime
+
+    from .monitoring import status
+    from .monitoring.buffers import to_markdown as buffers_md
+    from .schemas.diagnosis import Buffer
+
+    with open(args.orders, newline="") as f:
+        rows = [(r["order_id"], datetime.fromisoformat(r["due"])) for r in csv.DictReader(f)]
+    now = datetime.fromisoformat(args.now) if args.now else datetime.now()
+    print(
+        buffers_md(
+            status(Buffer(id="b", protects="constraint", size_h=args.buffer_h), rows, now),
+            args.lang,
+        )
+    )
+    return 0
+
+
+def cmd_monitor(args: argparse.Namespace) -> int:
+    from .monitoring import WeekSnapshot, evaluate
+
+    weeks = [WeekSnapshot(**w) for w in json.loads(open(args.weeks).read())]
+    alerts = evaluate(weeks, args.constraint, args.baseline_demand, args.next)
+    for a in alerts:
+        print(f"[{a.severity}] {a.kind}: {a.message}")
+    if not alerts:
+        print("no alerts")
+    return 1 if any(a.severity == "action" for a in alerts) else 0
+
+
+def cmd_sync(args: argparse.Namespace) -> int:
+    import csv
+    from datetime import date
+    from pathlib import Path
+
+    from .sync import LogEntry, Outcome, SyncPolicy, run_sync
+
+    store = ClientStore(_root(args), args.client_id)
+    logs = [
+        LogEntry(**json.loads(x)) for x in Path(args.logs).read_text().splitlines() if x.strip()
+    ]
+    with open(args.outcomes, newline="") as f:
+        outcomes = [Outcome(r["person"], r["task"], float(r["score"])) for r in csv.DictReader(f)]
+    skills = {}
+    for spec in args.skill:
+        task, rest = spec.split("=", 1)
+        version, path = rest.split(":", 1)
+        skills[task] = (version, Path(path).read_text())
+    salt = os.environ.get(args.salt_env, "")
+    policy = SyncPolicy(
+        consent_ref=args.consent, salt=salt, share_individual_ranking=args.share_ranking
+    )
+    res = run_sync(
+        make_llm(args.budget),
+        args.pod,
+        logs,
+        outcomes,
+        skills,
+        policy,
+        date.today(),
+        lang=args.lang,
+    )
+    out = Path(store.root) / "sync" / res.session.id
+    out.mkdir(parents=True, exist_ok=True)
+    (out / "report.md").write_text(res.pod_report)
+    for u in res.updates:
+        (out / f"{u.task}-v{u.new_version}.SKILL.md").write_text(u.new_skill)
+        (out / f"{u.task}.diff").write_text(u.diff)
+    store.put(res.session, produced_by="skill_sync")
+    print(res.pod_report)
+    print(f"\nproposals (approve before pushing to the team): {out}")
+    return 0
+
+
 def cmd_eval_cases(args: argparse.Namespace) -> int:
     from .evals.runner import MAX_RACE_BACKEND_GAP, run_all
 
@@ -622,6 +720,49 @@ def main(argv: list[str] | None = None) -> int:
         help="let approved systems execute external actions without drafts",
     )
     pv.set_defaults(fn=cmd_review)
+
+    pl = sub.add_parser("ledger", help="results ledger: show or add a measurement")
+    pl.add_argument("client_id")
+    pl.add_argument("action", choices=["show", "add"])
+    pl.add_argument("--metric")
+    pl.add_argument("--baseline", type=float)
+    pl.add_argument("--current", type=float)
+    pl.add_argument("--baseline-date")
+    pl.add_argument("--date")
+    pl.add_argument("--lagging", action="store_true")
+    pl.add_argument("--lag-note")
+    pl.add_argument("--lang", choices=["de", "en"], default="de")
+    pl.add_argument("--actor", default="monitoring")
+    pl.set_defaults(fn=cmd_ledger)
+
+    pbf = sub.add_parser("buffers", help="buffer penetration for open orders (csv order_id,due)")
+    pbf.add_argument("--orders", required=True)
+    pbf.add_argument("--buffer-h", type=float, default=168)
+    pbf.add_argument("--now")
+    pbf.add_argument("--lang", choices=["de", "en"], default="de")
+    pbf.set_defaults(fn=cmd_buffers)
+
+    pmo = sub.add_parser("monitor", help="constraint-shift alerts from weekly snapshots (json)")
+    pmo.add_argument("--weeks", required=True)
+    pmo.add_argument("--constraint", required=True)
+    pmo.add_argument("--next")
+    pmo.add_argument("--baseline-demand", type=float)
+    pmo.set_defaults(fn=cmd_monitor)
+
+    psy = sub.add_parser("sync", help="weekly team sync: skill update proposals (privacy-gated)")
+    psy.add_argument("client_id")
+    psy.add_argument("--pod", required=True)
+    psy.add_argument("--logs", required=True, help="jsonl: person,pod,role,task,text")
+    psy.add_argument("--outcomes", required=True, help="csv: person,task,score")
+    psy.add_argument(
+        "--skill", action="append", required=True, help="task=version:path/to/SKILL.md"
+    )
+    psy.add_argument("--consent", help="consent / works-agreement reference (required)")
+    psy.add_argument("--salt-env", default="UNCLOG_SYNC_SALT")
+    psy.add_argument("--share-ranking", action="store_true")
+    psy.add_argument("--lang", choices=["de", "en"], default="de")
+    psy.add_argument("--budget", type=float, default=2.0)
+    psy.set_defaults(fn=cmd_sync)
 
     pm = sub.add_parser("simulate", help="run the standard what-if scenarios on a case")
     pm.add_argument("case_dir")

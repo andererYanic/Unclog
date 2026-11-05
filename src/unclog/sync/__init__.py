@@ -1,3 +1,25 @@
-"""Weekly team sync, log mining, skill diffs; privacy-gated (brief §9.6).
+"""Weekly team sync: privacy-gated skill updates from top performers (brief §9.6)."""
 
-Not yet implemented; see build plan (brief §19)."""
+from .team_sync import (
+    LogEntry,
+    Outcome,
+    PrivacyError,
+    SkillUpdate,
+    SyncPolicy,
+    SyncResult,
+    pseudonym,
+    rank,
+    run_sync,
+)
+
+__all__ = [
+    "LogEntry",
+    "Outcome",
+    "PrivacyError",
+    "SkillUpdate",
+    "SyncPolicy",
+    "SyncResult",
+    "pseudonym",
+    "rank",
+    "run_sync",
+]
