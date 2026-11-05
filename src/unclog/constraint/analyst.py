@@ -21,6 +21,8 @@ from dataclasses import dataclass, field
 from ..domains.heat import DirectionVerdict, HeatTable, SignalKind
 from ..flow.eventlog_stats import EventLogStats
 from ..flow.graph import FlowGraph
+from ..i18n import domain_label
+from ..i18n import t as tr
 from ..schemas.common import Evidence, EvidenceFamily, EvidenceType, Source
 from ..schemas.diagnosis import (
     REQUIRED_DOMAINS,
@@ -171,6 +173,7 @@ class ConstraintReport:
     policy_audit: PolicyAudit
     direction: DirectionVerdict
     derived_sources: list[Source] = field(default_factory=list)
+    lang: str = "en"
 
     @property
     def work_mode(self) -> str:
@@ -295,8 +298,14 @@ def _hypotheses(
                                 row.domain, res.name, rid, *(graph.node(n).name for n in nodes)
                             ),
                             heat_score=row.score,
-                            description=f"{res.name} ({rid}) at {loads[rid].utilization:.0%} of "
-                            f"capacity in {row.domain.value}",
+                            description=tr(
+                                "cand_physical",
+                                lang,
+                                name=res.name,
+                                rid=rid,
+                                u=f"{loads[rid].utilization:.0%}",
+                                d=domain_label(row.domain.value, lang),
+                            ),
                             evidence=list(sig_ev),
                         )
                     )
@@ -318,7 +327,7 @@ def _hypotheses(
                     node_ids=nodes,
                     terms=candidate_terms(row.domain, *names),
                     heat_score=row.score,
-                    description=f"Policy: {p.statement}",
+                    description=tr("cand_policy", lang, s=p.statement),
                     evidence=[*sig_ev, *p.evidence],
                 )
             )
@@ -329,7 +338,9 @@ def _hypotheses(
             and row.domain.is_race
             and heat.direction.verdict is DirectionVerdict.market_limited
         ):
-            contradicting = sorted(d.value for d in internal_queues - {row.domain})
+            contradicting = sorted(
+                domain_label(d.value, lang) for d in internal_queues - {row.domain}
+            )
             nodes = (
                 {n.id for n in graph.nodes if n.domain_id == row.domain.value} if graph else set()
             )
@@ -340,16 +351,11 @@ def _hypotheses(
                 node_ids=nodes,
                 terms=candidate_terms(row.domain),
                 heat_score=row.score,
-                description=f"Market: demand/conversion at {row.domain.value} limits throughput "
-                "while capacity is ample",
+                description=tr("cand_market", lang, d=domain_label(row.domain.value, lang)),
                 evidence=list(sig_ev),
             )
             if contradicting:
-                c.notes.append(
-                    "internal queues at "
-                    + ", ".join(contradicting)
-                    + " contradict a market constraint"
-                )
+                c.notes.append(tr("note_contradict", lang, x=", ".join(contradicting)))
             cands.append(c)
             made = True
         if not made:
@@ -367,7 +373,7 @@ def _internal_queue_domains(heat: HeatTable) -> set[DomainName]:
 
 def _explain_unresolved(row, heat: HeatTable, lang: str = "en") -> Unresolved:
     kinds = {s.kind for s in row.signals}
-    d = row.domain.value
+    d = domain_label(row.domain.value, lang)
     actions = []
     if not row.has_flow_data:
         actions.append(_m("map_stage", lang, d=d))
@@ -385,14 +391,14 @@ def _explain_unresolved(row, heat: HeatTable, lang: str = "en") -> Unresolved:
 
 
 # ---- status ---------------------------------------------------------------------------------
-def _to_constraint(c: Candidate, direction_checked: bool) -> Constraint:
+def _to_constraint(c: Candidate, direction_checked: bool, lang: str = "en") -> Constraint:
     fams = _families(c.evidence)
     passed = [t for t in c.tests if t.passed]
     contradicted = bool(c.notes) and c.type is ConstraintType.market
     if c.type is ConstraintType.market and EvidenceFamily.data not in fams:
         # The model only shows capacity is ample (constraint is "outside"); locating it at a
         # specific RACE stage needs measured data on that stage, not an estimate.
-        c.notes.append("stage located only by estimates; needs measured stage data")
+        c.notes.append(tr("note_estimates_only", lang))
         contradicted = True
     confirmed = len(fams) >= 2 and bool(passed) and direction_checked and not contradicted
     conf = (
@@ -426,7 +432,7 @@ def _to_constraint(c: Candidate, direction_checked: bool) -> Constraint:
 
 
 def _predict_next(
-    graph: FlowGraph | None, binding: Constraint | None, util_threshold: float
+    graph: FlowGraph | None, binding: Constraint | None, util_threshold: float, lang: str = "en"
 ) -> NextConstraint | None:
     if graph is None or binding is None:
         return None
@@ -445,20 +451,18 @@ def _predict_next(
         return NextConstraint(
             "physical",
             b.resource_id,
-            f"If demand grows ~{head:.0%}, {b.resource_id} saturates first.",
+            tr("next_market_saturates", lang, h=f"{head:.0%}", r=b.resource_id),
         )
     if b is not None and b.utilization >= 0.8:
         return NextConstraint(
             "physical",
             b.resource_id,
-            f"After relief, {b.resource_id} is the busiest other resource at "
-            f"{b.utilization:.0%}; watch its queue.",
+            tr("next_physical", lang, r=b.resource_id, u=f"{b.utilization:.0%}"),
         )
     return NextConstraint(
         "market",
         None,
-        "After relief, capacity is ample: expect the market (RACE) to become "
-        f"the constraint (~{head:.0%} demand headroom). Re-run Step 1.",
+        tr("next_market", lang, h=f"{head:.0%}"),
     )
 
 
@@ -474,7 +478,14 @@ def _discovery_actions(
         acts.append(_m("map_flow", lang))
     for r in heat.rows:
         if r.domain in REQUIRED_DOMAINS and r.verdict is DomainVerdict.not_assessed:
-            acts.append(_m("get_metric", lang, d=r.domain.value, h=metric_hint(r.domain, lang)))
+            acts.append(
+                _m(
+                    "get_metric",
+                    lang,
+                    d=domain_label(r.domain.value, lang),
+                    h=metric_hint(r.domain, lang),
+                )
+            )
     for c in cands:
         if c.status is ConstraintStatus.confirmed:
             continue
@@ -486,7 +497,7 @@ def _discovery_actions(
         if EvidenceFamily.model not in fams and c.type is not ConstraintType.policy:
             acts.append(_m("c_model", lang, c=c.id))
     for u in unresolved:
-        acts += [f"{u.domain.value}: {a}" for a in u.actions]
+        acts += [f"{domain_label(u.domain.value, lang)}: {a}" for a in u.actions]
     return list(dict.fromkeys(acts))
 
 
@@ -502,11 +513,16 @@ def identify(
     """``sim_replications > 0`` runs the relief test as a simulation (G9-grade evidence).
     ``lang`` sets the language of reasons and discovery actions (de|en)."""
     texts = list(texts) + _quotes_from_graph(graph)
-    pa = audit(graph, texts)
+    pa = audit(graph, texts, lang)
     cfg = heat.config
     cands, unresolved = _hypotheses(heat, graph, pa, cfg.util_candidate, lang)
     ctx = TestContext(
-        graph, list(event_logs), activity_nodes or {}, texts, sim_replications=sim_replications
+        graph,
+        list(event_logs),
+        activity_nodes or {},
+        texts,
+        sim_replications=sim_replications,
+        lang=lang,
     )
     for c in cands:
         for test in ALL_TESTS:
@@ -516,7 +532,7 @@ def identify(
                 c.tests.append(t)
                 c.evidence += ev
     direction_checked = heat.direction.verdict is not DirectionVerdict.no_flow_data
-    constraints = [_to_constraint(c, direction_checked) for c in cands]
+    constraints = [_to_constraint(c, direction_checked, lang) for c in cands]
     score = {id(k): c.heat_score for k, c in zip(constraints, cands, strict=True)}
     confirmed = sorted(
         (k for k in constraints if k.status is ConstraintStatus.confirmed),
@@ -531,10 +547,11 @@ def identify(
         candidates=pending,
         unresolved=unresolved,
         discovery_actions=_discovery_actions(heat, constraints, unresolved, graph, lang),
-        next_constraint=_predict_next(graph, binding, cfg.util_candidate),
+        next_constraint=_predict_next(graph, binding, cfg.util_candidate, lang),
         policy_audit=pa,
         direction=heat.direction.verdict,
         derived_sources=[DERIVED_SOURCE] if uses_model else [],
+        lang=lang,
     )
 
 

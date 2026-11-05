@@ -340,6 +340,7 @@ def cmd_report(args: argparse.Namespace) -> int:
         graph,
         list(case.metrics),
         open_decisions=["§20 open questions: see docs/decisions/000-open-questions.md"],
+        goal=case.goal,
     )
     if report.binding is not None:
         if args.with_agents:

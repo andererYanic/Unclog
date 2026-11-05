@@ -40,8 +40,11 @@ renders only when its inputs exist; with no confirmed constraint, the package is
 9. simulation scenarios
 10. JSON export
 
-**Known gap:** headings, actions and plain-language summaries are localized, but the diagnosis
-detail lines (heat-table rationale, constraint descriptions, demand-vs-capacity note) are still
-English. Localizing the heat table and analyst text is a follow-up.
+**Localization (updated):** all text our code produces goes through `unclog/i18n.py`: heat-table
+rationale, demand-vs-capacity notes, constraint descriptions, test notes, policy findings, report
+headings, verdict, status and type labels, and German area names (e.g. "Auftragsabwicklung").
+Identifiers stay English in the data. Client data (names of steps and metrics) stays in the
+language it was entered in. `tests/test_i18n.py` fails if English from our code reappears in
+German reports. Not localized: decimal separators (20.6, not 20,6).
 
 The constraint analyst and `run_case` now take `lang`.

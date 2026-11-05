@@ -17,8 +17,8 @@ _{{ L.as_of }} {{ today }}_
 {% endif %}
 
 ## {{ L.heat_headline }}
-{% for r in heat_top -%}
-- **{{ r.domain.value }}** — {{ r.verdict.value }}: {{ r.rationale }}
+{% for name, verdict, why in heat_top -%}
+- **{{ name }}** — {{ verdict }}: {{ why }}
 {% endfor %}
 {{ direction_note }}
 

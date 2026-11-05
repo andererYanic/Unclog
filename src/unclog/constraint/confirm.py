@@ -13,6 +13,7 @@ from dataclasses import dataclass, field
 
 from ..flow.eventlog_stats import EventLogStats
 from ..flow.graph import FlowGraph
+from ..i18n import t as tr
 from ..schemas.common import Evidence, EvidenceType, Source, SourceKind
 from ..schemas.diagnosis import ConfirmationTest, ConstraintType, DomainName, TestKind
 from .policy_audit import TextItem
@@ -60,6 +61,7 @@ class TestContext:
     texts: list[TextItem]
     sim_replications: int = 0  # >0: relief test by simulation (G9) instead of static math
     sim_horizon_weeks: float = 16
+    lang: str = "en"
 
 
 TestResult = tuple[ConfirmationTest, list[Evidence]] | None
@@ -70,7 +72,7 @@ def _sim_relief(c: Candidate, ctx: TestContext) -> TestResult:
 
     if c.type is ConstraintType.physical:
         relief = Scenario(f"relief +10% {c.target}", capacity={c.target: RELIEF_FACTOR})
-        what = f"+{RELIEF_FACTOR - 1:.0%} capacity at {c.target}"
+        what = tr("t_cap_plus", ctx.lang, p=f"{RELIEF_FACTOR - 1:.0%}", r=c.target)
     elif c.type is ConstraintType.market:
         relief = Scenario("relief +10% demand", arrival_scale=RELIEF_FACTOR)
         what = f"+{RELIEF_FACTOR - 1:.0%} demand"
@@ -86,9 +88,14 @@ def _sim_relief(c: Candidate, ctx: TestContext) -> TestResult:
     gain = (after.throughput.mean or 0) / max(base.throughput.mean or 1e-9, 1e-9) - 1
     # Significant: the relief scenario's 5th percentile beats the baseline mean.
     passed = gain > 0.02 and (after.throughput.p05 or 0) > (base.throughput.mean or 0)
-    note = (
-        f"simulated {what}: throughput {base.throughput.fmt('/wk')} -> "
-        f"{after.throughput.fmt('/wk')} ({gain:+.1%}, {ctx.sim_replications} replications)"
+    note = tr(
+        "t_sim_relief",
+        ctx.lang,
+        what=what,
+        a=base.throughput.fmt("/wk"),
+        b=after.throughput.fmt("/wk"),
+        g=f"{gain:+.1%}",
+        n=ctx.sim_replications,
     )
     ev = Evidence(
         id=_eid("simrelief", c.target, note),
@@ -111,16 +118,16 @@ def relief_test(c: Candidate, ctx: TestContext) -> TestResult:
     if c.type is ConstraintType.physical:
         after = g.with_capacity_scale(c.target, RELIEF_FACTOR).effective_throughput()
         passed = after > before * 1.005
-        what = f"+{RELIEF_FACTOR - 1:.0%} capacity at {c.target}"
-        why = "" if passed else " (resource not saturated: extra capacity adds nothing)"
+        what = tr("t_cap_plus", ctx.lang, p=f"{RELIEF_FACTOR - 1:.0%}", r=c.target)
+        why = "" if passed else tr("t_not_saturated", ctx.lang)
     elif c.type is ConstraintType.market:
         after = g.with_arrival_scale(RELIEF_FACTOR).effective_throughput()
         passed = after >= before * (1 + (RELIEF_FACTOR - 1) * 0.9)
-        what = f"+{RELIEF_FACTOR - 1:.0%} demand"
-        why = "" if passed else " (a resource saturates: demand is not the only limit)"
+        what = tr("t_demand_plus", ctx.lang, p=f"{RELIEF_FACTOR - 1:.0%}")
+        why = "" if passed else tr("t_saturates", ctx.lang)
     else:
         return None
-    note = f"{what}: throughput {before:.2f} -> {after:.2f} units/week{why}"
+    note = tr("t_relief", ctx.lang, what=what, a=f"{before:.2f}", b=f"{after:.2f}", why=why)
     ev = Evidence(
         id=_eid("relief", c.target, note),
         source_id=DERIVED_SOURCE.id,
@@ -132,21 +139,19 @@ def relief_test(c: Candidate, ctx: TestContext) -> TestResult:
     ]
 
 
-def _idle_capacity_test(c: Candidate, g: FlowGraph) -> TestResult:
+def _idle_capacity_test(c: Candidate, g: FlowGraph, lang: str = "en") -> TestResult:
     """Market version of starvation: every resource has slack and nothing waits internally."""
     loads = [r for r in g.resource_loads().values() if r.load_h > 0]
     waits = {n: w for n, w in _node_wait(g).items() if w >= WAIT_THRESHOLD_H}
     busiest = max(loads, key=lambda r: r.utilization) if loads else None
     passed = bool(loads) and busiest.utilization < STARVED_BELOW and not waits
     note = (
-        f"busiest resource {busiest.resource_id} at {busiest.utilization:.0%}"
+        tr("t_idle_busiest", lang, r=busiest.resource_id, u=f"{busiest.utilization:.0%}")
         if busiest
-        else "no loaded resources"
+        else tr("t_idle_none", lang)
     )
     note += (
-        "; no internal queues -> capacity idles waiting for demand"
-        if not waits
-        else f"; internal waits at {', '.join(sorted(waits))}"
+        tr("t_idle_ok", lang) if not waits else tr("t_idle_waits", lang, x=", ".join(sorted(waits)))
     )
     ev = Evidence(
         id=_eid("idle", c.target, note),
@@ -162,7 +167,7 @@ def _idle_capacity_test(c: Candidate, g: FlowGraph) -> TestResult:
 def starvation_test(c: Candidate, ctx: TestContext) -> TestResult:
     g = ctx.graph
     if g is not None and c.type is ConstraintType.market:
-        return _idle_capacity_test(c, g)
+        return _idle_capacity_test(c, g, ctx.lang)
     if g is None or c.type is not ConstraintType.physical:
         return None
     loads = g.resource_loads()
@@ -174,8 +179,8 @@ def starvation_test(c: Candidate, ctx: TestContext) -> TestResult:
     eff = {r: loads[r].utilization / max(1.0, u_c) for r in down_res}
     passed = all(u < STARVED_BELOW for u in eff.values()) and all(u < u_c for u in eff.values())
     detail = ", ".join(f"{r} {u:.0%}" for r, u in sorted(eff.items()))
-    note = f"downstream of {c.target} ({u_c:.0%}): {detail}" + (
-        " -> starved/idle capacity" if passed else " -> a downstream resource is busier"
+    note = tr("t_starve", ctx.lang, r=c.target, u=f"{u_c:.0%}", detail=detail) + (
+        tr("t_starved", ctx.lang) if passed else tr("t_busier", ctx.lang)
     )
     ev = Evidence(
         id=_eid("starve", c.target, note),
@@ -227,8 +232,8 @@ def queue_test(c: Candidate, ctx: TestContext) -> TestResult:
                 desc = f"{node.name}: " + ", ".join(
                     x
                     for x in (
-                        f"{q:g} queued" if q else "",
-                        f"~{w:.0f} h wait" if w is not None else "",
+                        tr("queued", ctx.lang, q=f"{q:g}") if q else "",
+                        tr("wait", ctx.lang, w=f"{w:.0f}") if w is not None else "",
                     )
                     if x
                 )
@@ -250,9 +255,13 @@ def queue_test(c: Candidate, ctx: TestContext) -> TestResult:
                 and (a.wait_median_h or 0) >= WAIT_THRESHOLD_H
             ):
                 best_here = max(best_here, a.wait_median_h)
-                desc = (
-                    f"event log: median {a.wait_median_h:.0f} h wait before '{act}' "
-                    f"(p90 {a.wait_p90_h:.0f} h, n={a.count})"
+                desc = tr(
+                    "t_log_wait",
+                    ctx.lang,
+                    w=f"{a.wait_median_h:.0f}",
+                    a=act,
+                    p90=f"{a.wait_p90_h:.0f}",
+                    n=a.count,
                 )
                 found.append(desc)
                 evidence.append(
@@ -267,7 +276,7 @@ def queue_test(c: Candidate, ctx: TestContext) -> TestResult:
     if not found:
         if g is None and not ctx.event_logs:
             return None
-        note = "no queue or long wait observed in front of the candidate"
+        note = tr("t_queue_none", ctx.lang)
         return ConfirmationTest(kind=TestKind.queue, passed=False, note=note), []
     passed = True
     note = "; ".join(found)
@@ -278,7 +287,7 @@ def queue_test(c: Candidate, ctx: TestContext) -> TestResult:
             top, w_top = max(others.items(), key=lambda kv: kv[1])
             if best_here and w_top > 2 * best_here:
                 passed = False
-                note += f" (but a longer wait exists at {top}: ~{w_top:.0f} h)"
+                note += tr("t_queue_longer", ctx.lang, n=top, w=f"{w_top:.0f}")
     return ConfirmationTest(
         kind=TestKind.queue, passed=passed, evidence_ids=[e.id for e in evidence], note=note
     ), evidence
@@ -305,7 +314,7 @@ def _text_test(
                 )
     if not evidence:
         return None  # absence of a quote is not evidence against the candidate
-    note = f'{len(evidence)} statement(s), e.g. "{evidence[0].quote}"'
+    note = tr("t_statements", ctx.lang, n=len(evidence), q=evidence[0].quote)
     return ConfirmationTest(
         kind=kind, passed=True, evidence_ids=[e.id for e in evidence], note=note
     ), evidence

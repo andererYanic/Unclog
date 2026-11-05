@@ -25,6 +25,7 @@ from enum import StrEnum
 
 from ..flow.eventlog_stats import EventLogStats
 from ..flow.graph import FlowGraph, NodeLoad, ResourceLoad
+from ..i18n import domain_label, t
 from ..schemas.diagnosis import REQUIRED_DOMAINS, Domain, DomainName, DomainVerdict, StageMetric
 from .priors import ORDER, default_prior
 
@@ -112,6 +113,7 @@ class HeatTable:
     rows: list[HeatRow]
     direction: DirectionCheck
     config: HeatConfig
+    lang: str = "en"
 
     def ranked(self) -> list[HeatRow]:
         return sorted(self.rows, key=lambda r: (-r.score, ORDER.index(r.domain)))
@@ -128,11 +130,20 @@ class HeatTable:
         issues = []
         for r in self.rows:
             if r.domain in REQUIRED_DOMAINS and r.verdict is DomainVerdict.not_assessed:
-                issues.append(f"{r.domain.value}: not assessed ({r.rationale.lower()})")
+                issues.append(
+                    t(
+                        "cov_not_assessed",
+                        self.lang,
+                        d=domain_label(r.domain.value, self.lang),
+                        why=r.rationale.lower(),
+                    )
+                )
             if r.verdict is DomainVerdict.clear and not (r.metrics or r.evidence_ids):
-                issues.append(f"{r.domain.value}: 'clear' without metric or evidence")
+                issues.append(
+                    t("cov_clear_noev", self.lang, d=domain_label(r.domain.value, self.lang))
+                )
         if self.direction.verdict in (DirectionVerdict.no_flow_data,):
-            issues.append("both-direction (demand vs capacity) check not possible: no flow data")
+            issues.append(t("cov_no_flow", self.lang))
         return issues
 
 
@@ -150,7 +161,9 @@ def _severity_util(u: float, cfg: HeatConfig) -> float:
     return max(0.0, min(1.0, (u - cfg.util_candidate) / 0.3))
 
 
-def direction_check(graph: FlowGraph | None, cfg: HeatConfig = DEFAULT_CONFIG) -> DirectionCheck:
+def direction_check(
+    graph: FlowGraph | None, cfg: HeatConfig = DEFAULT_CONFIG, lang: str = "en"
+) -> DirectionCheck:
     if graph is None:
         return DirectionCheck(
             DirectionVerdict.no_flow_data,
@@ -158,7 +171,7 @@ def direction_check(graph: FlowGraph | None, cfg: HeatConfig = DEFAULT_CONFIG) -
             None,
             None,
             None,
-            "No flow graph; cannot compare demand with capacity.",
+            t("dir_no_graph", lang),
         )
     b = graph.bottleneck()
     if b is None:
@@ -168,7 +181,7 @@ def direction_check(graph: FlowGraph | None, cfg: HeatConfig = DEFAULT_CONFIG) -
             None,
             None,
             None,
-            "Flow graph has no resource load (missing service times?).",
+            t("dir_no_load", lang),
         )
     dom_of = {n.id: n.domain_id for n in graph.nodes}
     b_domains = sorted({dom_of[n] for n in b.node_ids})
@@ -177,22 +190,15 @@ def direction_check(graph: FlowGraph | None, cfg: HeatConfig = DEFAULT_CONFIG) -
     u = b.utilization
     backend = any(not DomainName(d).is_race for d in b_domains)
     if u >= cfg.util_overload:
-        where = "back-end" if backend else "front-end (RACE)"
-        flood = (
-            (
-                " More leads/demand will only lengthen the queue (flooding trap); do not "
-                "recommend growth work until this is relieved."
-            )
-            if backend
-            else ""
-        )
+        where = t("where_backend", lang) if backend else t("where_front", lang)
+        flood = t("flood", lang) if backend else ""
         return DirectionCheck(
             DirectionVerdict.capacity_limited,
             b.resource_id,
             b_dom,
             u,
             headroom,
-            f"{b.resource_id} ({where}, {b_dom}) is at {u:.0%} of capacity." + flood,
+            t("dir_cap", lang, r=b.resource_id, where=where, dom=b_dom, u=f"{u:.0%}") + flood,
         )
     if u < cfg.ample_capacity:
         return DirectionCheck(
@@ -201,9 +207,7 @@ def direction_check(graph: FlowGraph | None, cfg: HeatConfig = DEFAULT_CONFIG) -
             b_dom,
             u,
             headroom,
-            f"Capacity is ample (busiest resource {b.resource_id} at {u:.0%}; "
-            f"+{headroom:.0%} demand possible). Demand is the limit: look at "
-            "RACE stages.",
+            t("dir_market", lang, r=b.resource_id, u=f"{u:.0%}", h=f"{headroom:.0%}"),
         )
     return DirectionCheck(
         DirectionVerdict.inconclusive,
@@ -211,8 +215,7 @@ def direction_check(graph: FlowGraph | None, cfg: HeatConfig = DEFAULT_CONFIG) -
         b_dom,
         u,
         headroom,
-        f"Busiest resource {b.resource_id} at {u:.0%}: near capacity but not "
-        "over. Needs queue evidence or simulation (step 6).",
+        t("dir_inconclusive", lang, r=b.resource_id, u=f"{u:.0%}"),
     )
 
 
@@ -222,6 +225,7 @@ def build_heat_table(
     priors: dict[DomainName, float] | None = None,
     cfg: HeatConfig = DEFAULT_CONFIG,
     event_logs: list[tuple[DomainName | str, EventLogStats, str]] = (),
+    lang: str = "en",
 ) -> HeatTable:
     """``event_logs``: (domain, stats, source_id) triples from ``flow.compute``."""
     priors = priors or {}
@@ -241,17 +245,26 @@ def build_heat_table(
         gap = _metric_gap(m)
         if gap is not None and gap >= cfg.gap_candidate:
             how = (
-                f"{m.value / m.benchmark:.0f}x the benchmark"
+                t("gap_x", lang, x=f"{m.value / m.benchmark:.0f}")
                 if gap >= 1 and not m.higher_is_better
-                else f"{gap:.0%} worse"
+                else t("gap_pct", lang, p=f"{gap:.0%}")
             )
-            est = "" if m.measured else " [estimate]"
+            est = "" if m.measured else t("estimate", lang)
             row.signals.append(
                 Signal(
                     SignalKind.conversion,
                     m.measured,
                     min(1.0, gap),
-                    f"{m.name} = {m.value:g} {m.unit} vs benchmark {m.benchmark:g} ({how}){est}",
+                    t(
+                        "sig_conv",
+                        lang,
+                        name=m.name,
+                        v=f"{m.value:g}",
+                        unit=m.unit,
+                        b=f"{m.benchmark:g}",
+                        how=how,
+                        est=est,
+                    ),
                     (m.id,),
                 )
             )
@@ -280,8 +293,14 @@ def build_heat_table(
                             SignalKind.capacity,
                             bool(res.evidence) and not res.assumption,
                             _severity_util(u, cfg),
-                            f"{rid} at {u:.0%} of capacity ({r.load_h:.0f} of {r.capacity_h:.0f} "
-                            "h/week)",
+                            t(
+                                "sig_cap",
+                                lang,
+                                r=rid,
+                                u=f"{u:.0%}",
+                                load=f"{r.load_h:.0f}",
+                                cap=f"{r.capacity_h:.0f}",
+                            ),
                             (rid,),
                         )
                     )
@@ -289,9 +308,9 @@ def build_heat_table(
             if (load.queue_length or 0) > 0 or (wait is not None and wait >= cfg.wait_candidate_h):
                 parts = []
                 if load.queue_length:
-                    parts.append(f"{load.queue_length:g} queued")
+                    parts.append(t("queued", lang, q=f"{load.queue_length:g}"))
                 if wait is not None:
-                    parts.append(f"~{wait:.0f} h wait")
+                    parts.append(t("wait", lang, w=f"{wait:.0f}"))
                 sev = min(1.0, (wait or cfg.wait_candidate_h) / (cfg.wait_candidate_h * 5))
                 row.signals.append(
                     Signal(
@@ -313,8 +332,14 @@ def build_heat_table(
                     SignalKind.queue,
                     True,
                     min(1.0, slow.wait_median_h / (cfg.wait_candidate_h * 5)),
-                    f"median {slow.wait_median_h:.0f} h wait before '{slow.activity}' "
-                    f"(p90 {slow.wait_p90_h:.0f} h, {slow.count} cases, event log)",
+                    t(
+                        "sig_log_wait",
+                        lang,
+                        w=f"{slow.wait_median_h:.0f}",
+                        a=slow.activity,
+                        p90=f"{slow.wait_p90_h:.0f}",
+                        n=slow.count,
+                    ),
                     (source_id, slow.activity),
                 )
             )
@@ -330,9 +355,14 @@ def build_heat_table(
                         SignalKind.capacity,
                         True,
                         min(1.0, (ratio - 1)),
-                        f"backlog growing: {st.arrivals_per_week:.1f} cases/week in vs "
-                        f"{st.completions_per_week:.1f} out; {st.open_cases} open vs ~"
-                        f"{expected_wip:.0f} expected (event log; check export edge effects)",
+                        t(
+                            "sig_backlog",
+                            lang,
+                            i=f"{st.arrivals_per_week:.1f}",
+                            o=f"{st.completions_per_week:.1f}",
+                            open=st.open_cases,
+                            exp=f"{expected_wip:.0f}",
+                        ),
                         (source_id,),
                     )
                 )
@@ -353,16 +383,21 @@ def build_heat_table(
         elif any(m.source_id for m in row.metrics) or row.evidence_ids:
             row.verdict = DomainVerdict.clear
             util = (
-                f"max utilization {row.max_utilization:.0%}"
+                t("max_util", lang, u=f"{row.max_utilization:.0%}")
                 if row.max_utilization is not None
                 else ""
             )
-            row.rationale = "No signal above thresholds" + (f" ({util})" if util else "")
+            row.rationale = t("no_signal", lang) + (f" ({util})" if util else "")
         elif row.metrics:
             row.verdict = DomainVerdict.not_assessed
-            row.rationale = "Only unsourced estimates; verify with data before dismissing"
+            row.rationale = t("only_estimates", lang)
         else:
             row.verdict = DomainVerdict.not_assessed
-            row.rationale = "No metrics or flow data yet"
+            row.rationale = t("no_data", lang)
 
-    return HeatTable(rows=list(rows.values()), direction=direction_check(graph, cfg), config=cfg)
+    return HeatTable(
+        rows=list(rows.values()),
+        direction=direction_check(graph, cfg, lang),
+        config=cfg,
+        lang=lang,
+    )

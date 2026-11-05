@@ -2,32 +2,24 @@
 
 from __future__ import annotations
 
-from ..schemas.diagnosis import DomainVerdict
+from ..i18n import domain_label, t
 from .heat import HeatTable
 
-_ICON = {
-    DomainVerdict.candidate: "candidate",
-    DomainVerdict.clear: "clear",
-    DomainVerdict.not_assessed: "not assessed",
-    DomainVerdict.constraint: "CONSTRAINT",
-}
 
-
-def to_markdown(table: HeatTable) -> str:
-    lines = [
-        "| Rank | Domain | Prior | Signals | Max util. | Score | Verdict | Key evidence |",
-        "|---:|---|---:|---|---:|---:|---|---|",
-    ]
+def to_markdown(table: HeatTable, lang: str | None = None) -> str:
+    lang = lang or table.lang
+    lines = [t("heat_header", lang), "|---:|---|---:|---|---:|---:|---|---|"]
     for i, r in enumerate(table.ranked(), start=1):
         sig = ", ".join(sorted(k.value for k in r.signal_kinds)) or "–"
         util = f"{r.max_utilization:.0%}" if r.max_utilization is not None else "–"
         lines.append(
-            f"| {i} | {r.domain.value} | {r.prior:.2f} | {sig} | {util} | {r.score:.2f} | "
-            f"{_ICON[r.verdict]} | {r.rationale.replace('|', '/')} |"
+            f"| {i} | {domain_label(r.domain.value, lang)} | {r.prior:.2f} | {sig} | {util} | "
+            f"{r.score:.2f} | "
+            f"{t('verdict_' + r.verdict.value, lang)} | {r.rationale.replace('|', '/')} |"
         )
     d = table.direction
-    lines += ["", f"**Demand vs capacity:** {d.verdict.value}. {d.note}"]
+    lines += ["", f"**{t('demand_vs_capacity', lang)}:** {d.verdict.value}. {d.note}"]
     issues = table.coverage_issues()
     if issues:
-        lines += ["", "**Coverage gaps (G5):**", *[f"- {x}" for x in issues]]
+        lines += ["", f"**{t('coverage_gaps', lang)}:**", *[f"- {x}" for x in issues]]
     return "\n".join(lines)

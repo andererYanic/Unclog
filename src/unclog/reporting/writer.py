@@ -9,6 +9,7 @@ is possible before any model call.
 from __future__ import annotations
 
 import json
+import re
 from dataclasses import dataclass, field
 from datetime import date
 from pathlib import Path
@@ -23,6 +24,7 @@ from ..domains.heat import HeatTable
 from ..domains.report import to_markdown as heat_md
 from ..flow.graph import FlowGraph
 from ..goalfactor import GoalTree
+from ..i18n import domain_label, verdict_label
 from ..paths import knowledge_dir
 from ..schemas.design import Risk, ValueScenario
 from ..schemas.diagnosis import ConstraintType, DomainVerdict, StageMetric
@@ -75,6 +77,7 @@ L10N = {
         "yes": "yes",
         "no": "no",
         "triggers": "Re-baseline triggers",
+        "target": "Target of the plan",
         "risk_title": "Risk & governance register",
         "plain": {
             ConstraintType.physical: "{who} cannot keep up: every hour there is an hour for "
@@ -127,6 +130,7 @@ L10N = {
         "yes": "ja",
         "no": "nein",
         "triggers": "Auslöser für Neubewertung",
+        "target": "Ziel der Maßnahmen",
         "risk_title": "Risiko- und Governance-Register",
         "plain": {
             ConstraintType.physical: "{who} kommt nicht hinterher: jede Stunde dort ist eine "
@@ -156,6 +160,7 @@ class Bundle:
     roadmap: Roadmap | None = None
     sims: list[SimResult] = field(default_factory=list)
     open_decisions: list[str] = field(default_factory=list)
+    goal: object | None = None  # schemas.engagement.Goal (company goal from intake)
 
 
 def _env() -> Environment:
@@ -174,7 +179,7 @@ def _plain(b: Bundle, L: dict) -> str:
     if c is None:
         return ""
     what = (
-        c.description.split("Rule found:")[-1].strip()
+        re.split(r"Rule found:|Gefundene Regel:", c.description)[-1].strip()
         if c.type is ConstraintType.policy
         else c.description
     )
@@ -221,7 +226,12 @@ def write(b: Bundle, out_dir: str | Path) -> list[Path]:
     decisions = list(b.open_decisions)
     if b.opportunities:
         decisions += b.opportunities.open_questions
-    goal = b.tree.root.statement if b.tree else None
+    goal = None
+    if b.goal is not None:
+        goal = f"{b.goal.statement} ({L['unit']}: {b.goal.unit_of_throughput})"
+    if b.tree is not None:
+        target = f"{L['target']}: {b.tree.root.statement}"
+        goal = f"{goal}\n\n{target}" if goal else target
     put(
         "01-executive-summary.md",
         env.get_template("executive_summary.md.j2").render(
@@ -231,7 +241,14 @@ def write(b: Bundle, out_dir: str | Path) -> list[Path]:
             goal=goal,
             binding=b.report.binding,
             binding_plain=_plain(b, L),
-            heat_top=heat_top,
+            heat_top=[
+                (
+                    domain_label(r.domain.value, b.lang),
+                    verdict_label(r.verdict.value, b.lang),
+                    r.rationale,
+                )
+                for r in heat_top
+            ],
             direction_note=b.heat.direction.note,
             moves=moves,
             discovery=b.report.discovery_actions,

@@ -15,6 +15,7 @@ import hashlib
 from dataclasses import dataclass, field
 
 from ..flow.graph import FlowGraph
+from ..i18n import t as tr
 from ..schemas.common import Evidence, EvidenceType
 from ..schemas.diagnosis import DomainName, Policy, PolicyKind
 from .text import TextHit, domains_mentioned, scan
@@ -69,7 +70,7 @@ def _evidence(item_source: str, locator: str, quote: str, testimony: bool, n: in
     )
 
 
-def structural_batch_policies(graph: FlowGraph) -> list[Policy]:
+def structural_batch_policies(graph: FlowGraph, lang: str = "en") -> list[Policy]:
     out = []
     loads = graph.node_loads()
     for node in graph.nodes:
@@ -85,13 +86,13 @@ def structural_batch_policies(graph: FlowGraph) -> list[Policy]:
                 Policy(
                     id=_pid("batch", node.id),
                     kind=PolicyKind.batch_rule,
-                    statement=f"'{node.name}' releases work in batches of ~{batch:g}; "
-                    f"items wait ~{wait:.0f} h",
-                    rewards_behavior="fewer context switches for the team (local efficiency)",
+                    statement=tr(
+                        "pol_batch", lang, node=node.name, b=f"{batch:g}", w=f"{wait:.0f}"
+                    ),
+                    rewards_behavior=tr("pol_batch_rewards", lang),
                     raises_system_t=False,
                     local_optimum=True,
-                    recommendation="Release work continuously or in much smaller transfer batches; "
-                    "measure the wait before and after.",
+                    recommendation=tr("pol_batch_rec", lang),
                     domain_id=node.domain_id,
                     affects_node_ids=[node.id],
                     **grounding,
@@ -100,7 +101,7 @@ def structural_batch_policies(graph: FlowGraph) -> list[Policy]:
     return out
 
 
-def text_policies(items: list[TextItem]) -> tuple[list[Policy], list[TextHit]]:
+def text_policies(items: list[TextItem], lang: str = "en") -> tuple[list[Policy], list[TextHit]]:
     policies: dict[str, Policy] = {}
     all_hits: list[TextHit] = []
     for item in items:
@@ -130,18 +131,13 @@ def text_policies(items: list[TextItem]) -> tuple[list[Policy], list[TextHit]]:
                 id=pid,
                 kind=kind,
                 statement=h.quote,
-                rewards_behavior=(
-                    "local efficiency (keeping resources busy) rather than system throughput"
-                )
-                if local
-                else None,
+                rewards_behavior=tr("pol_local_rewards", lang) if local else None,
                 raises_system_t=False if local else None,
                 local_optimum=local,
                 recommendation=(
-                    "Replace with: " + "; ".join(REPLACEMENT_KPIS[:3])
+                    tr("pol_replace", lang, x=tr("kpi_replacements", lang))
                     if local
-                    else "Ask why it exists and what happens without it (brief §11.7); test "
-                    "removing or shrinking it before automating around it (brief §2.4.8)."
+                    else tr("pol_challenge", lang)
                 ),
                 domain_id=domain,
                 evidence=[ev],
@@ -149,9 +145,9 @@ def text_policies(items: list[TextItem]) -> tuple[list[Policy], list[TextHit]]:
     return list(policies.values()), all_hits
 
 
-def audit(graph: FlowGraph | None, items: list[TextItem]) -> PolicyAudit:
-    structural = structural_batch_policies(graph) if graph is not None else []
-    textual, hits = text_policies(items)
+def audit(graph: FlowGraph | None, items: list[TextItem], lang: str = "en") -> PolicyAudit:
+    structural = structural_batch_policies(graph, lang) if graph is not None else []
+    textual, hits = text_policies(items, lang)
     # Attach text evidence to a structural batch policy in the same domain (corroboration).
     merged: list[Policy] = []
     used: set[str] = set()
@@ -170,7 +166,7 @@ def audit(graph: FlowGraph | None, items: list[TextItem]) -> PolicyAudit:
                 update={
                     "evidence": [*sp.evidence, *extra],
                     "assumption": False if extra else sp.assumption,
-                    "statement": f"{sp.statement}. Rule found: {quotes}",
+                    "statement": f"{sp.statement}. {tr('pol_rule_found', lang)} {quotes}",
                 }
             )
         merged.append(sp)

@@ -256,6 +256,7 @@ def _finish(run: PipelineRun, out_dir, economics: Economics | None = None) -> Pi
             feasibility=s.feasibility,
             roadmap=s.roadmap,
             open_decisions=decisions,
+            goal=s.goal,
         )
         run.report_paths = write(b, out_dir)
         from ..qa.gates import to_markdown as gates_md

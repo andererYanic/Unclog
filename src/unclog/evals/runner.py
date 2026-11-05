@@ -47,7 +47,7 @@ def run_case(case: SyntheticCase, lang: str = "en") -> CaseResult:
         testimony = r.source.kind is SourceKind.interview
         texts += [TextItem(c.source_id, c.locator, c.text, testimony) for c in r.chunks]
     graph = case.graph()
-    heat = build_heat_table(case.metrics, graph, event_logs=logs)
+    heat = build_heat_table(case.metrics, graph, event_logs=logs, lang=lang)
     report = identify(
         heat, graph, event_logs=logs, texts=texts, activity_nodes=case.activity_nodes, lang=lang
     )
