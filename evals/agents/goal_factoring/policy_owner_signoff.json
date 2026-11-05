@@ -1,0 +1,31 @@
+{
+  "id": "policy_owner_signoff",
+  "input": {
+    "case": "hidden_policy_approval",
+    "lang": "de"
+  },
+  "expect": {
+    "must_cover": [
+      [
+        "freigab",
+        "sign-off",
+        "unterschr",
+        "schwelle",
+        "grenze",
+        "threshold"
+      ],
+      [
+        "täglich",
+        "daily",
+        "laufend",
+        "sofort",
+        "freitag"
+      ]
+    ],
+    "forbidden_live": [
+      "chatbot",
+      "kalkulator"
+    ],
+    "min_live": 3
+  }
+}

@@ -35,17 +35,23 @@ def cmd_sources(args: argparse.Namespace) -> int:
     return 0
 
 
-def make_llm(budget_usd: float | None = None):
-    """Default model client: Anthropic backend, disk cache, per-run budget. Patched in tests."""
+def make_llm(budget_usd: float | None = None, cache: bool = True, model: str | None = None):
+    """Default model client: Anthropic backend, disk cache, per-run budget. Patched in tests.
+
+    ``cache=False`` for evals (replicates must be independent samples).
+    """
     from .llm import CostTracker, LLMClient
     from .llm.backends import AnthropicBackend
     from .llm.cache import DiskCache
 
-    return LLMClient(
+    client = LLMClient(
         AnthropicBackend(),
         cost=CostTracker(budget_usd=budget_usd),
-        cache=DiskCache(os.environ.get("UNCLOG_LLM_CACHE", ".unclog-cache")),
+        cache=DiskCache(os.environ.get("UNCLOG_LLM_CACHE", ".unclog-cache")) if cache else None,
     )
+    if model:
+        client.default_model = model
+    return client
 
 
 def cmd_call_plan(args: argparse.Namespace) -> int:
@@ -162,6 +168,68 @@ def cmd_opportunities(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_eval_agent(args: argparse.Namespace) -> int:
+    from pathlib import Path
+
+    from .evals.agents import RUBRICS, SYSTEMS
+    from .evals.harness import gate_g14, llm_judge, load_cases, run_eval, suite_for
+
+    factory, graders = SYSTEMS[args.agent]
+    cases = load_cases(Path(args.root) / args.agent)
+    llm = make_llm(args.budget, cache=False, model=args.model)
+    if args.agent == "goal_factoring":
+        system = factory(lambda: llm, Path(args.cases_root))
+    else:
+        system = factory(lambda: llm)
+    graders = list(graders)
+    if args.judge:
+        graders.append(llm_judge(llm, RUBRICS[args.agent], system.render))
+    report = run_eval(
+        system,
+        cases,
+        graders,
+        n=args.n,
+        suite_id=args.agent,
+        model=args.model or "default",
+        harness_version=args.harness_version,
+    )
+    out = Path(args.out) / args.agent
+    out.mkdir(parents=True, exist_ok=True)
+    path = out / f"{report.run.id}.json"
+    path.write_text(report.to_json())
+    print(report.to_markdown())
+    problems = gate_g14(report, suite_for(args.agent, cases, RUBRICS[args.agent]))
+    print("\nG14: " + ("pass" if not problems else "FAIL — " + "; ".join(problems)))
+    print(f"report: {path}")
+    return 0 if not problems else 1
+
+
+def cmd_eval_compare(args: argparse.Namespace) -> int:
+    from pathlib import Path
+
+    from .evals.harness import EvalReport, compare, log_decision
+
+    base = EvalReport.from_json(Path(args.baseline).read_text())
+    cand = EvalReport.from_json(Path(args.candidate).read_text())
+    d = compare(base, cand, args.min_gain)
+    print(("ACCEPT" if d.accept else "REJECT") + "\n" + "\n".join(f"- {r}" for r in d.reasons))
+    if args.log:
+        log_decision(Path(args.log), base, cand, d, args.change or "")
+    return 0 if d.accept else 1
+
+
+def cmd_eval_rate(args: argparse.Namespace) -> int:
+    from pathlib import Path
+
+    from .evals.harness import EvalReport, collect_ratings
+
+    path = Path(args.report)
+    rep = collect_ratings(EvalReport.from_json(path.read_text()), limit=args.limit)
+    path.write_text(rep.to_json())
+    print(rep.to_markdown())
+    return 0
+
+
 def cmd_eval_cases(args: argparse.Namespace) -> int:
     from .evals.runner import MAX_RACE_BACKEND_GAP, run_all
 
@@ -253,6 +321,31 @@ def main(argv: list[str] | None = None) -> int:
     po.add_argument("--lang", choices=["de", "en"], default="de")
     po.add_argument("--budget", type=float, default=3.0)
     po.set_defaults(fn=cmd_opportunities)
+
+    pa = sub.add_parser("eval-agent", help="N-run eval of an agent (needs API access)")
+    pa.add_argument("agent", choices=["transcript_extractor", "goal_factoring"])
+    pa.add_argument("--n", type=int, default=10)
+    pa.add_argument("--model")
+    pa.add_argument("--judge", action="store_true", help="add the LLM-judge rubric grader")
+    pa.add_argument("--root", default="evals/agents")
+    pa.add_argument("--cases-root", default="evals/cases")
+    pa.add_argument("--out", default="evals/results")
+    pa.add_argument("--harness-version", default="1")
+    pa.add_argument("--budget", type=float, default=10.0)
+    pa.set_defaults(fn=cmd_eval_agent)
+
+    pcmp = sub.add_parser("eval-compare", help="hill-climb decision: baseline vs candidate")
+    pcmp.add_argument("baseline")
+    pcmp.add_argument("candidate")
+    pcmp.add_argument("--min-gain", type=float, default=0.0)
+    pcmp.add_argument("--log", default="evals/results/hillclimb.jsonl")
+    pcmp.add_argument("--change", help="what changed (prompt v2, new model, ...)")
+    pcmp.set_defaults(fn=cmd_eval_compare)
+
+    prt = sub.add_parser("eval-rate", help="rate eval outputs 1-10 as a human")
+    prt.add_argument("report")
+    prt.add_argument("--limit", type=int)
+    prt.set_defaults(fn=cmd_eval_rate)
 
     pm = sub.add_parser("simulate", help="run the standard what-if scenarios on a case")
     pm.add_argument("case_dir")

@@ -1,0 +1,26 @@
+{
+  "id": "de_kitchen_owner",
+  "input": {
+    "lang": "de",
+    "filename": "call.vtt",
+    "transcript": "WEBVTT\n\n00:01:00.000 --> 00:01:09.000\nInhaber: Wir bekommen so 40 bis 50 Anfragen pro Woche, meistens über die Website.\n\n00:01:20.000 --> 00:01:30.000\nInhaber: Ungefähr jedes dritte Angebot wird zum Auftrag.\n\n00:02:10.000 --> 00:02:20.000\nInhaber: Die Angebote unterschreibe ich selbst, immer freitags. Vorher geht keins raus.\n\n00:02:40.000 --> 00:02:50.000\nInhaber: Meine drei Monteure sind eigentlich gut ausgelastet, aber nicht überlastet.\n\n00:03:00.000 --> 00:03:08.000\nInhaber: Wie viele Angebote gerade offen sind, weiß ich nicht genau.\n"
+  },
+  "expect": {
+    "metrics": [
+      {
+        "domain": "RACE-A",
+        "value": 45,
+        "tolerance": 5
+      },
+      {
+        "domain": "RACE-C",
+        "value": 0.333,
+        "tolerance": 0.04
+      }
+    ],
+    "policy_kinds": [
+      "approval"
+    ],
+    "forbidden_values": []
+  }
+}

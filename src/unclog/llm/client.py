@@ -11,7 +11,7 @@ from .backends import Backend
 from .cache import ResponseCache
 from .cost import CostTracker
 from .pricing import cost_usd
-from .types import LLMRequest, LLMResponse, Message
+from .types import DEFAULT_MODEL, LLMRequest, LLMResponse, Message
 
 T = TypeVar("T", bound=BaseModel)
 
@@ -31,13 +31,18 @@ class LLMClient:
         cost: CostTracker | None = None,
         cache: ResponseCache | None = None,
         max_validation_retries: int = 2,
+        default_model: str | None = None,
     ) -> None:
         self.backend = backend
         self.cost = cost or CostTracker()
         self.cache = cache
         self.max_validation_retries = max_validation_retries
+        # Routing / model-change evals: replaces the default model where the caller didn't pick.
+        self.default_model = default_model
 
     def complete(self, request: LLMRequest) -> LLMResponse:
+        if self.default_model and request.model == DEFAULT_MODEL:
+            request = request.model_copy(update={"model": self.default_model})
         if self.cache is not None and (hit := self.cache.get(request)) is not None:
             return hit.model_copy(update={"from_cache": True})
         self.cost.check()

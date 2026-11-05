@@ -1,0 +1,29 @@
+{
+  "id": "en_saas_ceo",
+  "input": {
+    "lang": "en",
+    "filename": "call.vtt",
+    "transcript": "WEBVTT\n\n00:02:10.000 --> 00:02:18.000\nCEO: Our real problem is sales. Closing takes forever, deals drag on for two months.\n\n00:03:00.000 --> 00:03:10.000\nCEO: We get around 140 support tickets a week and three people answer them.\n\n00:05:40.000 --> 00:05:52.000\nCEO: Support is fine I think. Well, when Jonas from support is on vacation nothing gets answered.\n\n00:06:03.000 --> 00:06:10.000\nCEO: Our bonus plan pays support on tickets closed per day.\n"
+  },
+  "expect": {
+    "metrics": [
+      {
+        "domain": "support",
+        "value": 140,
+        "tolerance": 0
+      },
+      {
+        "domain": "RACE-C",
+        "value": 2,
+        "tolerance": 0.01
+      }
+    ],
+    "policy_kinds": [
+      "kpi"
+    ],
+    "forbidden_values": [
+      30,
+      60
+    ]
+  }
+}

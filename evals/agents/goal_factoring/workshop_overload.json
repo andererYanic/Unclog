@@ -1,0 +1,31 @@
+{
+  "id": "workshop_overload",
+  "input": {
+    "case": "backend_fulfillment_flood",
+    "lang": "en"
+  },
+  "expect": {
+    "must_cover": [
+      [
+        "workshop",
+        "carpenter",
+        "production"
+      ],
+      [
+        "release",
+        "wip",
+        "limit",
+        "accept",
+        "rope",
+        "quote",
+        "delivery date"
+      ]
+    ],
+    "forbidden_live": [
+      "more ads",
+      "ad campaign",
+      "increase traffic"
+    ],
+    "min_live": 3
+  }
+}
