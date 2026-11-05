@@ -28,4 +28,5 @@ unclog opportunities --case <dir> --lang de          # goal tree + AI opportunit
 - [x] 7. Agents for human-led calls (decision 007): bilingual first-call script and tailored call plan; transcript extractor with verbatim-quote verification; flow modeler with graph validation and retries; measured flow from event logs
 - [x] 8. Goal factoring: root goal computed from data, focusing-step skeletons, tree validation, TOC pruning, ranking, opportunity seeds; agent with retries (decision 008)
 - [x] 9. Technique library v1 (17 patterns, honest proven status, no invented uplift); Opportunity Analyst with code-owned position, proven-first, process health, ownership, scoring, priority and review-load (G8) checks (decision 009)
-- [ ] 10–17. See brief
+- [x] 10. Value model: T/I/OE with simulated ΔT (noise-tested), realization-path ΔOE, mirage ledger, carrying cost, run/build costs, portfolio de-duplication, adoption ramp; feasibility checklist with compliance flags (decision 010)
+- [ ] 11–17. See brief
