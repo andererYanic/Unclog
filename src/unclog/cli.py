@@ -109,6 +109,33 @@ def cmd_flow_from_log(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_goal_tree(args: argparse.Namespace) -> int:
+    from .agents.goal_factoring import factor_goal
+    from .evals.cases import load_case
+    from .evals.runner import run_case
+
+    case = load_case(args.case)
+    res = run_case(case)
+    if res.report.binding is None:
+        print("No confirmed constraint: only discovery actions are allowed (G4).")
+        for a in res.report.discovery_actions:
+            print(f"- {a}")
+        return 1
+    run = factor_goal(
+        make_llm(args.budget),
+        res.report.binding,
+        case.graph(),
+        case.metrics,
+        res.report.policy_audit.policies,
+        lang=args.lang,
+    )
+    print(run.result.to_markdown(args.lang))
+    if args.mermaid:
+        print("\n```mermaid\n" + run.result.to_mermaid() + "\n```")
+    print(f"\nprompt v{run.prompt_version}, {run.attempts} attempt(s), ${run.cost_usd:.4f}")
+    return 0
+
+
 def cmd_eval_cases(args: argparse.Namespace) -> int:
     from .evals.runner import MAX_RACE_BACKEND_GAP, run_all
 
@@ -187,6 +214,13 @@ def main(argv: list[str] | None = None) -> int:
     pf.add_argument("source_id")
     pf.add_argument("--domain", required=True)
     pf.set_defaults(fn=cmd_flow_from_log)
+
+    pg = sub.add_parser("goal-tree", help="goal-factor the confirmed constraint of a case")
+    pg.add_argument("--case", required=True)
+    pg.add_argument("--lang", choices=["de", "en"], default="de")
+    pg.add_argument("--mermaid", action="store_true")
+    pg.add_argument("--budget", type=float, default=2.0)
+    pg.set_defaults(fn=cmd_goal_tree)
 
     pm = sub.add_parser("simulate", help="run the standard what-if scenarios on a case")
     pm.add_argument("case_dir")

@@ -50,6 +50,9 @@ class GoalNode(Grounded):
     tag: ActionTag | None = None
     constraint_link: ConstraintLink | None = None
     owner: str | None = None
+    focus_step: FocusStep | None = None
+    effort_days: float | None = Field(None, gt=0, description="base actions: doable in days")
+    rationale: str | None = None
 
     @model_validator(mode="after")
     def _shape(self) -> Self:

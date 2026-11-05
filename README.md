@@ -14,6 +14,7 @@ unclog simulate evals/cases/backend_fulfillment_flood --gate design   # what-if 
 unclog call-plan --lang de [--case <dir>]         # bilingual first-call plan (+ tailored follow-ups)
 unclog extract-call <client_id> <source_id>       # transcript -> verified facts + review sheet (needs API access)
 unclog flow-from-log <client_id> <source_id> --domain fulfillment   # measured flow from an event log
+unclog goal-tree --case <dir> --lang de [--mermaid]   # goal-factor the confirmed constraint (needs API access)
 ```
 
 ## Status (build plan §19)
@@ -24,4 +25,5 @@ unclog flow-from-log <client_id> <source_id> --domain fulfillment   # measured f
 - [x] 5. Constraint identification: physical/policy/market hypotheses, confirmation tests (relief, starvation, queue, expedite, absence), evidence families, policy & KPI audit, G4 discovery-only mode, next-constraint prediction; 6 synthetic cases at 100% (decision 005)
 - [x] 6. Simulation: event-driven DES + Monte Carlo (validated vs M/M/1 and static load), batching, Drum-Buffer-Rope gate, customer vs in-shop lead time, standard focusing-step scenarios, simulation-backed relief test (decision 006)
 - [x] 7. Agents for human-led calls (decision 007): bilingual first-call script and tailored call plan; transcript extractor with verbatim-quote verification; flow modeler with graph validation and retries; measured flow from event logs
-- [ ] 8–17. See brief
+- [x] 8. Goal factoring: root goal computed from data, focusing-step skeletons, tree validation, TOC pruning, ranking, opportunity seeds; agent with retries (decision 008)
+- [ ] 9–17. See brief
