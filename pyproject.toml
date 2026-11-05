@@ -11,7 +11,8 @@ dependencies = [
 [project.optional-dependencies]
 llm = ["anthropic>=0.70"]
 ingest = ["openpyxl>=3.1", "pypdf>=4", "python-docx>=1.1"]
-dev = ["pytest>=8", "ruff>=0.6", "openpyxl>=3.1", "pypdf>=4", "python-docx>=1.1"]
+reports = ["jinja2>=3.1", "openpyxl>=3.1"]
+dev = ["pytest>=8", "ruff>=0.6", "openpyxl>=3.1", "pypdf>=4", "python-docx>=1.1", "jinja2>=3.1"]
 
 [project.scripts]
 unclog = "unclog.cli:main"

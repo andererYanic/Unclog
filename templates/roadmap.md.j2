@@ -1,0 +1,34 @@
+> {{ L.draft }}
+
+# {{ L.roadmap_title }} — {{ title }}
+
+## Drum-Buffer-Rope
+- **Drum:** {{ rm.dbr.drum }}
+- **Buffer:** {% if rm.dbr.buffer %}{{ "%.0f"|format(rm.dbr.buffer.size_h) }} h ({{ L.buffer_zones }}){% else %}–{% endif %}
+- **Rope:** {{ rm.dbr.rope }}
+{% for n in rm.dbr.notes %}- {{ n }}
+{% endfor %}
+
+{% for w in waves -%}
+{% set items = rm.wave(w) %}{% if items %}
+## {{ L["wave_" ~ w] }}
+{% for i in items -%}
+- [ ] {{ i.title }}{% if i.owner %} — {{ i.owner }}{% endif %}{% if i.effort_days %} ({{ i.effort_days|round(1) }} {{ L.days }}){% endif %}{% if i.start_condition %} _({{ i.start_condition }})_{% endif %}{% if i.reason %} — {{ i.reason }}{% endif %}
+{% endfor %}
+{% endif %}
+{%- endfor %}
+
+## {{ L.kpis }}
+| KPI | {{ L.baseline }} | {{ L.unit }} | {{ L.leading }} |
+|---|---:|---|---|
+{% for k in rm.kpis -%}
+| {{ k.name }} | {{ k.baseline if k.baseline is not none else "–" }} | {{ k.unit }} | {{ L.yes if k.leading else L.no }} |
+{% endfor %}
+
+## {{ L.triggers }}
+{% for t in rm.rebaseline_triggers -%}
+- {{ t }}
+{% endfor %}
+{% for w in rm.warnings %}
+> ⚠ {{ w }}
+{% endfor %}

@@ -311,6 +311,54 @@ def cmd_outbox(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_report(args: argparse.Namespace) -> int:
+    from .evals.cases import load_case
+    from .evals.runner import run_case
+    from .reporting import Bundle, plan, write
+    from .simulation import compare, standard_scenarios
+
+    case = load_case(args.case)
+    base = run_case(case, lang=args.lang)  # ingests raw files: event logs, transcripts, docs
+    graph = case.graph()
+    heat, report = base.heat, base.report
+    b = Bundle(
+        case.title,
+        args.lang,
+        heat,
+        report,
+        graph,
+        list(case.metrics),
+        open_decisions=["§20 open questions: see docs/decisions/000-open-questions.md"],
+    )
+    if report.binding is not None:
+        if args.with_agents:
+            from .agents.goal_factoring import factor_goal
+            from .agents.opportunity_analyst import analyse_opportunities
+
+            llm = make_llm(args.budget)
+            pols = report.policy_audit.policies
+            b.tree = factor_goal(
+                llm, report.binding, graph, case.metrics, pols, lang=args.lang
+            ).result
+            seeds = b.tree.opportunity_seeds()
+            if seeds:
+                b.opportunities = analyse_opportunities(
+                    llm, seeds, report.binding, graph, pols, lang=args.lang
+                ).result
+        b.roadmap = plan(report, b.tree, b.opportunities, graph, case.metrics, lang=args.lang)
+        if graph is not None and args.replications > 0:
+            b.sims = compare(
+                graph,
+                standard_scenarios(graph, report.binding.resource_id),
+                replications=args.replications,
+                horizon_weeks=16,
+            )
+    paths = write(b, args.out)
+    for p in paths:
+        print(p)
+    return 0
+
+
 def cmd_eval_cases(args: argparse.Namespace) -> int:
     from .evals.runner import MAX_RACE_BACKEND_GAP, run_all
 
@@ -468,6 +516,15 @@ def main(argv: list[str] | None = None) -> int:
     pb.add_argument("--reason")
     pb.add_argument("--actor", default=os.environ.get("USER", "reviewer"))
     pb.set_defaults(fn=cmd_outbox)
+
+    pw = sub.add_parser("report", help="write the deliverables package for a case")
+    pw.add_argument("--case", required=True)
+    pw.add_argument("--out", required=True)
+    pw.add_argument("--lang", choices=["de", "en"], default="de")
+    pw.add_argument("--with-agents", action="store_true", help="goal tree + opportunities (API)")
+    pw.add_argument("--replications", type=int, default=5, help="0 = skip simulation")
+    pw.add_argument("--budget", type=float, default=3.0)
+    pw.set_defaults(fn=cmd_report)
 
     pm = sub.add_parser("simulate", help="run the standard what-if scenarios on a case")
     pm.add_argument("case_dir")

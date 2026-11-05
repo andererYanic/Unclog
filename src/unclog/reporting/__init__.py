@@ -1,3 +1,16 @@
-"""Deliverable rendering (brief §15).
+"""Roadmap Planner (DBR, sequencing) and Report Writer (brief §15)."""
 
-Not yet implemented; see build plan (brief §19)."""
+from .roadmap import DBRDesign, Roadmap, RoadmapItem, design_dbr, plan
+from .writer import Bundle, export, write, write_workbook
+
+__all__ = [
+    "Bundle",
+    "DBRDesign",
+    "Roadmap",
+    "RoadmapItem",
+    "design_dbr",
+    "export",
+    "plan",
+    "write",
+    "write_workbook",
+]

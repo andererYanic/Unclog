@@ -60,6 +60,92 @@ DOMAIN_METRIC_HINTS: dict[DomainName, str] = {
 }
 
 
+DOMAIN_METRIC_HINTS_DE: dict[DomainName, str] = {
+    DomainName.race_r: "Besucher/Impressionen pro Woche, Werbebudget, Anzahl Werbemittel",
+    DomainName.race_a: "Anfragen pro Woche, Erstreaktionszeit (Median), Terminquote",
+    DomainName.race_c: "Abschlussquote, Dauer bis Abschluss, Nachfass-Zeit, Erscheinungsquote",
+    DomainName.race_e: "Kündigungen, Wiederkauf-/Upsell-Quote, Kundenwert",
+    DomainName.fulfillment: "Aufträge rein vs. geliefert pro Woche, Rückstand, Durchlaufzeit, "
+    "Termintreue",
+    DomainName.ops: "Auslastung und Warteschlangen je Team/Maschine",
+    DomainName.support: "Ticket-Rückstand, Zeit bis Erstantwort und Lösung",
+    DomainName.finance: "Zeit bis Rechnung, Zahlungsziel (DSO), Monatsabschluss, "
+    "Freigabe-Wartezeit",
+    DomainName.hr: "Zeit bis Einstellung, offene Schlüsselstellen, Einarbeitungszeit",
+    DomainName.procurement: "Fehlbestände, Schwankung der Lieferzeiten",
+    DomainName.product: "Release-Warteschlange, Wartezeit auf Review/Test",
+    DomainName.it: "Stunden manueller Datenübertragung, Schnittstellenfehler, Berichtsverzug",
+    DomainName.legal: "Länge und Wartezeit der Prüf-Warteschlange",
+    DomainName.mgmt: "Entscheidungen, die auf Inhaber/Schlüsselperson warten, Freigabe-Wartezeit",
+}
+
+_MSG = {
+    "map_stage": {
+        "en": "Map the {d} stage in the flow (volumes, service times, who does the work) so "
+        "load/capacity can be computed",
+        "de": "Stufe {d} im Ablauf erfassen (Mengen, Bearbeitungszeiten, wer arbeitet), damit "
+        "Last und Kapazität berechnet werden können",
+    },
+    "export_ts": {
+        "en": "Export timestamps/status history for {d} to measure where work waits",
+        "de": "Zeitstempel/Statusverlauf für {d} exportieren, um zu messen, wo Arbeit wartet",
+    },
+    "replace_est": {
+        "en": "Replace estimates for {d} with measured data ({h})",
+        "de": "Schätzungen für {d} durch Messdaten ersetzen ({h})",
+    },
+    "why_capacity": {
+        "en": "{d} looks weak, but the system is capacity-limited at {r}: more demand would only "
+        "queue up there",
+        "de": "{d} wirkt schwach, aber das System ist bei {r} kapazitätsbegrenzt: mehr Nachfrage "
+        "würde sich dort nur stauen",
+    },
+    "why_symptom": {
+        "en": "{d} metric is off-benchmark but no resource/queue explains it; may be a symptom of "
+        "a constraint elsewhere",
+        "de": "Kennzahl in {d} weicht vom Richtwert ab, aber keine Ressource/Warteschlange "
+        "erklärt das; evtl. Symptom eines Engpasses anderswo",
+    },
+    "why_open": {
+        "en": "signals at {d} do not yet point to a resource, policy or market",
+        "de": "Signale in {d} zeigen noch nicht auf eine Ressource, Regel oder den Markt",
+    },
+    "map_flow": {
+        "en": "Map one unit of throughput from market to cash with weekly volumes per stage, who "
+        "does the work, and how long it takes (brief §8.1)",
+        "de": "Einen Vorgang vom Markt bis zum Geldeingang abbilden: Mengen pro Woche je Stufe, "
+        "wer arbeitet, wie lange es dauert (Brief §8.1)",
+    },
+    "get_metric": {
+        "en": "Get a sourced metric for {d}: {h}",
+        "de": "Belegte Kennzahl für {d} beschaffen: {h}",
+    },
+    "c_export": {
+        "en": "{c}: export timestamps or queue counts to measure the wait in front of it",
+        "de": "{c}: Zeitstempel oder Warteschlangen-Zahlen exportieren, um die Wartezeit "
+        "davor zu messen",
+    },
+    "c_ask": {
+        "en": "{c}: ask 'If {r} took a day off, what would stop?' and 'What do you expedite?'",
+        "de": "{c}: fragen 'Wenn {r} einen Tag fehlt, was steht still?' und 'Was müssen Sie "
+        "beschleunigen?'",
+    },
+    "c_model": {
+        "en": "{c}: add volumes and service times to compute load vs capacity",
+        "de": "{c}: Mengen und Bearbeitungszeiten ergänzen, um Last gegen Kapazität zu rechnen",
+    },
+}
+
+
+def metric_hint(domain: DomainName, lang: str = "en") -> str:
+    table = DOMAIN_METRIC_HINTS_DE if lang == "de" else DOMAIN_METRIC_HINTS
+    return table.get(domain, "stage metrics" if lang != "de" else "Kennzahlen der Stufe")
+
+
+def _m(key: str, lang: str, **kw) -> str:
+    return _MSG[key]["de" if lang == "de" else "en"].format(**kw)
+
+
 @dataclass(frozen=True)
 class Unresolved:
     domain: DomainName
@@ -168,7 +254,11 @@ def _families(ev: list[Evidence]) -> set[EvidenceFamily]:
 
 # ---- hypothesis generation ------------------------------------------------------------------
 def _hypotheses(
-    heat: HeatTable, graph: FlowGraph | None, pa: PolicyAudit, util_threshold: float
+    heat: HeatTable,
+    graph: FlowGraph | None,
+    pa: PolicyAudit,
+    util_threshold: float,
+    lang: str = "en",
 ) -> tuple[list[Candidate], list[Unresolved]]:
     cands: list[Candidate] = []
     unresolved: list[Unresolved] = []
@@ -260,7 +350,7 @@ def _hypotheses(
             cands.append(c)
             made = True
         if not made:
-            unresolved.append(_explain_unresolved(row, heat))
+            unresolved.append(_explain_unresolved(row, heat, lang))
     return cands, unresolved
 
 
@@ -272,35 +362,22 @@ def _internal_queue_domains(heat: HeatTable) -> set[DomainName]:
     }
 
 
-def _explain_unresolved(row, heat: HeatTable) -> Unresolved:
+def _explain_unresolved(row, heat: HeatTable, lang: str = "en") -> Unresolved:
     kinds = {s.kind for s in row.signals}
+    d = row.domain.value
     actions = []
     if not row.has_flow_data:
-        actions.append(
-            f"Map the {row.domain.value} stage in the flow (volumes, service times, "
-            "who does the work) so load/capacity can be computed"
-        )
+        actions.append(_m("map_stage", lang, d=d))
     if SignalKind.queue not in kinds:
-        actions.append(
-            f"Export timestamps/status history for {row.domain.value} to measure where work waits"
-        )
+        actions.append(_m("export_ts", lang, d=d))
     if all(not s.measured for s in row.signals):
-        actions.append(
-            f"Replace estimates for {row.domain.value} with measured data "
-            f"({DOMAIN_METRIC_HINTS.get(row.domain, 'stage metrics')})"
-        )
+        actions.append(_m("replace_est", lang, d=d, h=metric_hint(row.domain, lang)))
     if heat.direction.verdict is DirectionVerdict.capacity_limited and row.domain.is_race:
-        reason = (
-            f"{row.domain.value} looks weak, but the system is capacity-limited at "
-            f"{heat.direction.bottleneck_resource}: more demand would only queue up there"
-        )
+        reason = _m("why_capacity", lang, d=d, r=heat.direction.bottleneck_resource)
     elif kinds == {SignalKind.conversion} and not row.domain.is_race:
-        reason = (
-            f"{row.domain.value} metric is off-benchmark but no resource/queue explains "
-            "it; may be a symptom of a constraint elsewhere"
-        )
+        reason = _m("why_symptom", lang, d=d)
     else:
-        reason = f"signals at {row.domain.value} do not yet point to a resource, policy or market"
+        reason = _m("why_open", lang, d=d)
     return Unresolved(row.domain, reason, tuple(actions))
 
 
@@ -383,34 +460,28 @@ def _predict_next(
 
 
 def _discovery_actions(
-    heat: HeatTable, cands: list[Constraint], unresolved: list[Unresolved], graph: FlowGraph | None
+    heat: HeatTable,
+    cands: list[Constraint],
+    unresolved: list[Unresolved],
+    graph: FlowGraph | None,
+    lang: str = "en",
 ) -> list[str]:
     acts: list[str] = []
     if graph is None:
-        acts.append(
-            "Map one unit of throughput from market to cash with weekly volumes per "
-            "stage, who does the work, and how long it takes (brief §8.1)"
-        )
+        acts.append(_m("map_flow", lang))
     for r in heat.rows:
         if r.domain in REQUIRED_DOMAINS and r.verdict is DomainVerdict.not_assessed:
-            acts.append(
-                f"Get a sourced metric for {r.domain.value}: {DOMAIN_METRIC_HINTS[r.domain]}"
-            )
+            acts.append(_m("get_metric", lang, d=r.domain.value, h=metric_hint(r.domain, lang)))
     for c in cands:
         if c.status is ConstraintStatus.confirmed:
             continue
         fams = c.confirming_families()
         if EvidenceFamily.data not in fams:
-            acts.append(
-                f"{c.id}: export timestamps or queue counts to measure the wait in front of it"
-            )
+            acts.append(_m("c_export", lang, c=c.id))
         if EvidenceFamily.testimony not in fams and c.type is ConstraintType.physical:
-            acts.append(
-                f"{c.id}: ask 'If {c.resource_id} took a day off, what would stop?' "
-                "and 'What do you expedite?'"
-            )
+            acts.append(_m("c_ask", lang, c=c.id, r=c.resource_id))
         if EvidenceFamily.model not in fams and c.type is not ConstraintType.policy:
-            acts.append(f"{c.id}: add volumes and service times to compute load vs capacity")
+            acts.append(_m("c_model", lang, c=c.id))
     for u in unresolved:
         acts += [f"{u.domain.value}: {a}" for a in u.actions]
     return list(dict.fromkeys(acts))
@@ -423,12 +494,14 @@ def identify(
     texts: list[TextItem] = (),
     activity_nodes: dict[str, str] | None = None,
     sim_replications: int = 0,
+    lang: str = "en",
 ) -> ConstraintReport:
-    """``sim_replications > 0`` runs the relief test as a simulation (G9-grade evidence)."""
+    """``sim_replications > 0`` runs the relief test as a simulation (G9-grade evidence).
+    ``lang`` sets the language of reasons and discovery actions (de|en)."""
     texts = list(texts) + _quotes_from_graph(graph)
     pa = audit(graph, texts)
     cfg = heat.config
-    cands, unresolved = _hypotheses(heat, graph, pa, cfg.util_candidate)
+    cands, unresolved = _hypotheses(heat, graph, pa, cfg.util_candidate, lang)
     ctx = TestContext(
         graph, list(event_logs), activity_nodes or {}, texts, sim_replications=sim_replications
     )
@@ -454,7 +527,7 @@ def identify(
         confirmed=confirmed,
         candidates=pending,
         unresolved=unresolved,
-        discovery_actions=_discovery_actions(heat, constraints, unresolved, graph),
+        discovery_actions=_discovery_actions(heat, constraints, unresolved, graph, lang),
         next_constraint=_predict_next(graph, binding, cfg.util_candidate),
         policy_audit=pa,
         direction=heat.direction.verdict,

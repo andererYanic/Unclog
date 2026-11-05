@@ -1,0 +1,55 @@
+> {{ L.draft }}
+
+# {{ L.exec_title }} — {{ title }}
+
+_{{ L.as_of }} {{ today }}_
+
+## {{ L.goal }}
+{{ goal or L.goal_missing }}
+
+## {{ L.constraint }}
+{% if binding -%}
+**{{ binding_plain }}**
+
+{{ binding.description }} ({{ L.confidence }} {{ "%.2f"|format(binding.confidence) }})
+{% else -%}
+{{ L.no_constraint }}
+{% endif %}
+
+## {{ L.heat_headline }}
+{% for r in heat_top -%}
+- **{{ r.domain.value }}** — {{ r.verdict.value }}: {{ r.rationale }}
+{% endfor %}
+{{ direction_note }}
+
+## {{ L.top_moves }}
+{% if moves -%}
+{% for m in moves -%}
+{{ loop.index }}. {{ m.title }}{% if m.owner %} — {{ m.owner }}{% endif %}{% if m.start_condition %} _({{ m.start_condition }})_{% endif %}
+{% endfor %}
+{%- else -%}
+{% for a in discovery[:5] -%}
+{{ loop.index }}. {{ a }}
+{% endfor %}
+{%- endif %}
+
+## {{ L.value }}
+{% if value_range -%}
+{{ L.value_range }}: {{ value_range }}. {{ L.value_note }}
+{% else -%}
+{{ L.value_missing }}
+{% endif %}
+
+## {{ L.risks }}
+{% for r in risks[:3] -%}
+- {{ r }}
+{% else -%}
+- –
+{% endfor %}
+
+## {{ L.decisions }}
+{% for d in decisions -%}
+- [ ] {{ d }}
+{% else -%}
+- –
+{% endfor %}

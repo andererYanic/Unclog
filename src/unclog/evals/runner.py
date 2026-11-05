@@ -34,7 +34,7 @@ class CaseResult:
         return all(self.checks.values())
 
 
-def run_case(case: SyntheticCase) -> CaseResult:
+def run_case(case: SyntheticCase, lang: str = "en") -> CaseResult:
     logs: list[tuple[str, EventLogStats, str]] = []
     texts: list[TextItem] = []
     for f in case.raw_files:
@@ -48,7 +48,9 @@ def run_case(case: SyntheticCase) -> CaseResult:
         texts += [TextItem(c.source_id, c.locator, c.text, testimony) for c in r.chunks]
     graph = case.graph()
     heat = build_heat_table(case.metrics, graph, event_logs=logs)
-    report = identify(heat, graph, event_logs=logs, texts=texts, activity_nodes=case.activity_nodes)
+    report = identify(
+        heat, graph, event_logs=logs, texts=texts, activity_nodes=case.activity_nodes, lang=lang
+    )
     res = CaseResult(case, heat, report, logs)
     res.checks = score(res)
     return res

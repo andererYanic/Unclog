@@ -1,0 +1,20 @@
+> {{ L.draft }}
+
+# {{ L.constraint_title }} — {{ title }}
+
+## {{ L.flow }}
+{% if resources -%}
+| {{ L.resource }} | {{ L.load }} | {{ L.capacity }} | {{ L.util }} |
+|---|---:|---:|---:|
+{% for r in resources -%}
+| {{ r.resource_id }} | {{ "%.0f"|format(r.load_h) }} h | {{ "%.0f"|format(r.capacity_h) }} h | {{ "%.0f"|format(r.utilization * 100) }}% |
+{% endfor %}
+{%- else -%}
+{{ L.no_flow }}
+{%- endif %}
+
+## {{ L.heat_table }}
+
+{{ heat_md }}
+
+{{ constraint_md }}
