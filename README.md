@@ -23,6 +23,7 @@ unclog package <client> <system> --template decision-brief --opportunity opp-x -
 unclog run-system <client> <system> --input record.json   # one run; external actions land as drafts
 unclog outbox <client> list|show|approve|reject [id]      # human approval of drafts (G13)
 unclog report --case <dir> --out <dir> --lang de [--with-agents]   # deliverables package (drafts for review)
+unclog pipeline --case <dir> --out <dir> [--client-id X] [--with-agents]   # gated, resumable end-to-end run
 ```
 
 ## Status (build plan §19)
@@ -39,4 +40,5 @@ unclog report --case <dir> --out <dir> --lang de [--with-agents]   # deliverable
 - [x] 11. Eval harness: N-run distributions (mean, variance, worst case, failure modes), code graders + optional LLM judge, hill-climb rule (mean up, worst case not down) with decision log, G14 gate, human rating CLI, model override (decision 011)
 - [x] 12. Build & deploy (provisional defaults, decision 012): 3 proven-pattern templates (decision brief, speed-to-lead drafts, release gate without AI), draft outbox with approval and audit, platform-neutral packaging (SKILL.md, routine, runbook, rollback, handover), G13/G15 checks incl. secret and infrastructure scan
 - [x] 13. Roadmap Planner (waves, DBR by constraint type, KPIs, re-baseline triggers) and Report Writer (bilingual Jinja deliverables, value workbook, risk register, JSON export; all marked draft for review) (decision 013)
-- [ ] 14–17. See brief
+- [x] 14. QA gates G1–G17, Critic, gated and resumable pipeline (checkpointed LLM phases, critic retry-then-escalate, human-review stop); deterministic evidence ids (decision 014)
+- [ ] 15–17. See brief

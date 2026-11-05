@@ -190,7 +190,7 @@ def _signal_evidence(row, graph: FlowGraph | None, metrics_by_id) -> list[Eviden
         ):
             out.append(
                 Evidence(
-                    id=_eid("cap"),
+                    id=_eid("cap", s.detail),
                     source_id=DERIVED_SOURCE.id,
                     type=EvidenceType.load_capacity_calc,
                     note=s.detail,
@@ -199,7 +199,10 @@ def _signal_evidence(row, graph: FlowGraph | None, metrics_by_id) -> list[Eviden
         elif s.kind is SignalKind.capacity:  # event-log backlog growth
             out.append(
                 Evidence(
-                    id=_eid("cap"), source_id=s.refs[0], type=EvidenceType.log_data, note=s.detail
+                    id=_eid("cap", s.refs[0], s.detail),
+                    source_id=s.refs[0],
+                    type=EvidenceType.log_data,
+                    note=s.detail,
                 )
             )
         elif (
@@ -213,7 +216,7 @@ def _signal_evidence(row, graph: FlowGraph | None, metrics_by_id) -> list[Eviden
             if src and not node.assumption and s.measured:
                 out.append(
                     Evidence(
-                        id=_eid("q"),
+                        id=_eid("q", src, s.detail),
                         source_id=src,
                         type=EvidenceType.queue_observation,
                         note=s.detail,
@@ -222,7 +225,7 @@ def _signal_evidence(row, graph: FlowGraph | None, metrics_by_id) -> list[Eviden
         elif s.kind is SignalKind.queue:  # event log
             out.append(
                 Evidence(
-                    id=_eid("q"),
+                    id=_eid("q", *s.refs, s.detail),
                     source_id=s.refs[0],
                     type=EvidenceType.log_data,
                     locator=f"activity {s.refs[1]}" if len(s.refs) > 1 else None,
@@ -234,7 +237,7 @@ def _signal_evidence(row, graph: FlowGraph | None, metrics_by_id) -> list[Eviden
             if m is not None and m.source_id:
                 out.append(
                     Evidence(
-                        id=_eid("conv"),
+                        id=_eid("conv", m.id, s.detail),
                         source_id=m.source_id,
                         type=EvidenceType.log_data if m.measured else EvidenceType.interview_claim,
                         locator=f"metric {m.id}",

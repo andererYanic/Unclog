@@ -462,5 +462,25 @@
       "fulfillment"
     ],
     "local_optimum_flagged": true
+  },
+  "goal": {
+    "statement": "Make money now and in the future: grow profitable consulting projects",
+    "unit_of_throughput": "signed project",
+    "t_definition": "revenue minus truly variable costs per signed project (~40% of price)",
+    "i_definition": "WIP, open orders/quotes, tools",
+    "oe_definition": "payroll, licences, rent, inference",
+    "baseline": {
+      "currency": "EUR",
+      "period": "month"
+    },
+    "horizon": "12 months",
+    "evidence": [
+      {
+        "id": "ev-goal-race_speed_to_lead",
+        "source_id": "src-bench",
+        "type": "interview_claim",
+        "locator": "first call"
+      }
+    ]
   }
 }

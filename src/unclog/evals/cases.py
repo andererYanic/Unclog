@@ -14,6 +14,7 @@ from pydantic import Field
 from ..flow.graph import FlowGraph
 from ..schemas.common import Source, UnclogModel
 from ..schemas.diagnosis import FlowEdge, FlowNode, Resource, StageMetric, Task
+from ..schemas.engagement import Goal
 
 
 class SyntheticCase(UnclogModel):
@@ -22,6 +23,7 @@ class SyntheticCase(UnclogModel):
     kind: str = Field(description="race | backend | mixed")
     traps: list[str] = Field(default_factory=list)
     description: str
+    goal: Goal | None = None
     sources: list[Source] = Field(default_factory=list)
     resources: list[Resource] = Field(default_factory=list)
     nodes: list[FlowNode] = Field(default_factory=list)

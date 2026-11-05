@@ -359,6 +359,24 @@ def cmd_report(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_pipeline(args: argparse.Namespace) -> int:
+    from .evals.cases import load_case
+    from .orchestrator import run_pipeline
+    from .qa import to_markdown as gates_md
+
+    case = load_case(args.case)
+    store = ClientStore(_root(args), args.client_id) if args.client_id else None
+    factory = (lambda: make_llm(args.budget)) if args.with_agents else None
+    run = run_pipeline(case, lang=args.lang, llm_factory=factory, store=store, out_dir=args.out)
+    print(f"status: {run.status}\nreason: {run.reason}")
+    for h in run.human_review:
+        print(f"human review: {h}")
+    print("\n" + gates_md(run.gates["report"]))
+    for line in run.state.log:
+        print(f"log: {line}")
+    return 0 if run.status == "awaiting_review" else 1
+
+
 def cmd_eval_cases(args: argparse.Namespace) -> int:
     from .evals.runner import MAX_RACE_BACKEND_GAP, run_all
 
@@ -525,6 +543,15 @@ def main(argv: list[str] | None = None) -> int:
     pw.add_argument("--replications", type=int, default=5, help="0 = skip simulation")
     pw.add_argument("--budget", type=float, default=3.0)
     pw.set_defaults(fn=cmd_report)
+
+    pp = sub.add_parser("pipeline", help="run the gated engagement pipeline on a case")
+    pp.add_argument("--case", required=True)
+    pp.add_argument("--out", required=True)
+    pp.add_argument("--client-id", help="enables checkpoints in clients/<id>/pipeline")
+    pp.add_argument("--lang", choices=["de", "en"], default="de")
+    pp.add_argument("--with-agents", action="store_true")
+    pp.add_argument("--budget", type=float, default=5.0)
+    pp.set_defaults(fn=cmd_pipeline)
 
     pm = sub.add_parser("simulate", help="run the standard what-if scenarios on a case")
     pm.add_argument("case_dir")

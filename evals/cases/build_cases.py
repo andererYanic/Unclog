@@ -39,7 +39,61 @@ def m(id_, dom, name, value, unit, *, src=None, measured=True, bm=None, hib=None
     return out
 
 
+GOALS = {
+    "race_speed_to_lead": (
+        "Make money now and in the future: grow profitable consulting projects",
+        "signed project",
+        0.40,
+    ),
+    "backend_fulfillment_flood": (
+        "Make money now and in the future: deliver more custom furniture orders profitably",
+        "delivered order",
+        0.45,
+    ),
+    "hidden_policy_approval": (
+        "Make money now and in the future: install more kitchens",
+        "installed kitchen",
+        0.30,
+    ),
+    "market_after_elevation": (
+        "Make money now and in the future: sell the extra workshop capacity",
+        "delivered order",
+        0.45,
+    ),
+    "conflicting_testimony": (
+        "Make money now and in the future: grow recurring revenue",
+        "paying customer month",
+        0.80,
+    ),
+}
+
+
+def goal_for(case_id: str, source_id: str) -> dict | None:
+    if case_id not in GOALS:
+        return None
+    statement, unit, margin = GOALS[case_id]
+    return {
+        "statement": statement,
+        "unit_of_throughput": unit,
+        "t_definition": f"revenue minus truly variable costs per {unit} (~{margin:.0%} of price)",
+        "i_definition": "WIP, open orders/quotes, tools",
+        "oe_definition": "payroll, licences, rent, inference",
+        "baseline": {"currency": "EUR", "period": "month"},
+        "horizon": "12 months",
+        "evidence": [
+            {
+                "id": f"ev-goal-{case_id}",
+                "source_id": source_id,
+                "type": "interview_claim",
+                "locator": "first call",
+            }
+        ],
+    }
+
+
 def write(case: dict) -> None:
+    if "goal" not in case and case.get("sources"):
+        case["goal"] = goal_for(case["id"], case["sources"][-1]["id"])
     d = HERE / case["id"]
     d.mkdir(exist_ok=True)
     (d / "case.json").write_text(json.dumps(case, indent=2) + "\n")

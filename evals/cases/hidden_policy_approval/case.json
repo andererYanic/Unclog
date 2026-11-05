@@ -272,5 +272,25 @@
       "RACE-C"
     ],
     "local_optimum_flagged": true
+  },
+  "goal": {
+    "statement": "Make money now and in the future: install more kitchens",
+    "unit_of_throughput": "installed kitchen",
+    "t_definition": "revenue minus truly variable costs per installed kitchen (~30% of price)",
+    "i_definition": "WIP, open orders/quotes, tools",
+    "oe_definition": "payroll, licences, rent, inference",
+    "baseline": {
+      "currency": "EUR",
+      "period": "month"
+    },
+    "horizon": "12 months",
+    "evidence": [
+      {
+        "id": "ev-goal-hidden_policy_approval",
+        "source_id": "src-intv-sales",
+        "type": "interview_claim",
+        "locator": "first call"
+      }
+    ]
   }
 }

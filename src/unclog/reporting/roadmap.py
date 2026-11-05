@@ -236,7 +236,9 @@ def plan(
         "opportunity": 4,
     }
     items.sort(key=lambda i: (order[i.wave], kind_order.get(i.kind, 9)))
-    if not any(i.wave == "exploit" for i in items):
+    if (tree is not None or opportunities is not None) and not any(
+        i.wave == "exploit" for i in items
+    ):
         warnings.append("no exploit actions: elevate would come before exploiting (G10)")
 
     dbr = design_dbr(c, graph, lang=lang)

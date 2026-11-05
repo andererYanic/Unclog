@@ -212,5 +212,25 @@
     },
     "work_mode": "full",
     "next_constraint_kind": "physical"
+  },
+  "goal": {
+    "statement": "Make money now and in the future: sell the extra workshop capacity",
+    "unit_of_throughput": "delivered order",
+    "t_definition": "revenue minus truly variable costs per delivered order (~45% of price)",
+    "i_definition": "WIP, open orders/quotes, tools",
+    "oe_definition": "payroll, licences, rent, inference",
+    "baseline": {
+      "currency": "EUR",
+      "period": "month"
+    },
+    "horizon": "12 months",
+    "evidence": [
+      {
+        "id": "ev-goal-market_after_elevation",
+        "source_id": "src-ads-2027",
+        "type": "interview_claim",
+        "locator": "first call"
+      }
+    ]
   }
 }

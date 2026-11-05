@@ -228,5 +228,25 @@
     "must_not_confirm": [
       "RACE-C"
     ]
+  },
+  "goal": {
+    "statement": "Make money now and in the future: grow recurring revenue",
+    "unit_of_throughput": "paying customer month",
+    "t_definition": "revenue minus truly variable costs per paying customer month (~80% of price)",
+    "i_definition": "WIP, open orders/quotes, tools",
+    "oe_definition": "payroll, licences, rent, inference",
+    "baseline": {
+      "currency": "EUR",
+      "period": "month"
+    },
+    "horizon": "12 months",
+    "evidence": [
+      {
+        "id": "ev-goal-conflicting_testimony",
+        "source_id": "src-intv-ceo-saas",
+        "type": "interview_claim",
+        "locator": "first call"
+      }
+    ]
   }
 }

@@ -8,7 +8,7 @@ variability.
 
 from __future__ import annotations
 
-import itertools
+import hashlib
 from dataclasses import dataclass, field
 
 from ..flow.eventlog_stats import EventLogStats
@@ -28,11 +28,12 @@ RELIEF_FACTOR = 1.10
 WAIT_THRESHOLD_H = 24.0
 STARVED_BELOW = 0.85
 
-_ids = itertools.count(1)
 
-
-def _eid(prefix: str) -> str:
-    return f"ev-{prefix}-{next(_ids)}"
+def _eid(prefix: str, *content: object) -> str:
+    """Deterministic evidence id from its content: same input, same id (reproducible runs,
+    checkpoint keys stay stable; no hidden global counter)."""
+    digest = hashlib.sha1("|".join(map(str, content)).encode()).hexdigest()[:10]
+    return f"ev-{prefix}-{digest}"
 
 
 @dataclass
@@ -90,7 +91,10 @@ def _sim_relief(c: Candidate, ctx: TestContext) -> TestResult:
         f"{after.throughput.fmt('/wk')} ({gain:+.1%}, {ctx.sim_replications} replications)"
     )
     ev = Evidence(
-        id=_eid("simrelief"), source_id=DERIVED_SOURCE.id, type=EvidenceType.simulation, note=note
+        id=_eid("simrelief", c.target, note),
+        source_id=DERIVED_SOURCE.id,
+        type=EvidenceType.simulation,
+        note=note,
     )
     return ConfirmationTest(kind=TestKind.relief, passed=passed, evidence_ids=[ev.id], note=note), [
         ev
@@ -118,7 +122,7 @@ def relief_test(c: Candidate, ctx: TestContext) -> TestResult:
         return None
     note = f"{what}: throughput {before:.2f} -> {after:.2f} units/week{why}"
     ev = Evidence(
-        id=_eid("relief"),
+        id=_eid("relief", c.target, note),
         source_id=DERIVED_SOURCE.id,
         type=EvidenceType.load_capacity_calc,
         note=note,
@@ -145,7 +149,7 @@ def _idle_capacity_test(c: Candidate, g: FlowGraph) -> TestResult:
         else f"; internal waits at {', '.join(sorted(waits))}"
     )
     ev = Evidence(
-        id=_eid("idle"),
+        id=_eid("idle", c.target, note),
         source_id=DERIVED_SOURCE.id,
         type=EvidenceType.load_capacity_calc,
         note=note,
@@ -174,7 +178,7 @@ def starvation_test(c: Candidate, ctx: TestContext) -> TestResult:
         " -> starved/idle capacity" if passed else " -> a downstream resource is busier"
     )
     ev = Evidence(
-        id=_eid("starve"),
+        id=_eid("starve", c.target, note),
         source_id=DERIVED_SOURCE.id,
         type=EvidenceType.load_capacity_calc,
         note=note,
@@ -232,7 +236,7 @@ def queue_test(c: Candidate, ctx: TestContext) -> TestResult:
                 if data_src and not node.assumption:
                     evidence.append(
                         Evidence(
-                            id=_eid("queue"),
+                            id=_eid("queue", data_src, nid, desc),
                             source_id=data_src,
                             type=EvidenceType.queue_observation,
                             locator=f"node {nid}",
@@ -253,7 +257,7 @@ def queue_test(c: Candidate, ctx: TestContext) -> TestResult:
                 found.append(desc)
                 evidence.append(
                     Evidence(
-                        id=_eid("queue"),
+                        id=_eid("queue", src, act, desc),
                         source_id=src,
                         type=EvidenceType.log_data,
                         locator=f"activity {act}",
@@ -292,7 +296,7 @@ def _text_test(
             if rx.search(sentence) and mentions(sentence, terms):
                 evidence.append(
                     Evidence(
-                        id=_eid(kind.value),
+                        id=_eid(kind.value, item.source_id, item.locator, sentence.strip()),
                         source_id=item.source_id,
                         type=etype if item.testimony else EvidenceType.document,
                         locator=item.locator,

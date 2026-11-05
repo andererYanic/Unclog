@@ -1,3 +1,6 @@
-"""Quality gates G1-G17 and critic checks (brief §16).
+"""Quality gates G1-G17 and the Critic (brief §16)."""
 
-Not yet implemented; see build plan (brief §19)."""
+from .critic import critique
+from .gates import GATES, GateResult, run_gates, specificity, to_markdown
+
+__all__ = ["GATES", "GateResult", "critique", "run_gates", "specificity", "to_markdown"]
