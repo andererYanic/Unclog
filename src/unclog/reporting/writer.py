@@ -24,7 +24,7 @@ from ..domains.heat import HeatTable
 from ..domains.report import to_markdown as heat_md
 from ..flow.graph import FlowGraph
 from ..goalfactor import GoalTree
-from ..i18n import domain_label, verdict_label
+from ..i18n import domain_label, num, verdict_label
 from ..paths import knowledge_dir
 from ..schemas.design import Risk, ValueScenario
 from ..schemas.diagnosis import ConstraintType, DomainVerdict, StageMetric
@@ -223,9 +223,9 @@ def write(b: Bundle, out_dir: str | Path) -> list[Path]:
         }
         cur = b.economics.currency
         value_range = (
-            f"{tot[ValueScenario.low]:,.0f} – {tot[ValueScenario.high]:,.0f} {cur} "
+            f"{num(tot[ValueScenario.low], b.lang)} – {num(tot[ValueScenario.high], b.lang)} {cur} "
             f"({L['value_sum']} "
-            f"{b.value.portfolio[ValueScenario.base]:,.0f} {cur})"
+            f"{num(b.value.portfolio[ValueScenario.base], b.lang)} {cur})"
         )
     risks = [f"{r.description} (L{r.likelihood}×I{r.impact})" for r in _risks(b)]
     decisions = list(b.open_decisions)

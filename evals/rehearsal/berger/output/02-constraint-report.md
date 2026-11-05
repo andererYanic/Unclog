@@ -15,7 +15,7 @@
 
 | Rang | Bereich | Prior | Signale | Max. Ausl. | Score | Urteil | Wichtigste Belege |
 |---:|---|---:|---|---:|---:|---|---|
-| 1 | RACE-C (Abschluss) | 0.15 | capacity, queue | 140% | 4.15 | Kandidat | inhaber zu 140% ausgelastet (25 von 18 h/Woche); Aufmaß: 46 in der Warteschlange, ~315 h Wartezeit; Angebot: ~74 h Wartezeit; Auftrag: ~162 h Wartezeit; Median 315 h Wartezeit vor 'aufmass' (p90 615 h, 76 Fälle, Ereignisprotokoll); Rückstand wächst: 13.0 Fälle/Woche rein gegen 2.2 raus; 122 offen gegen ~11 erwartet (Ereignisprotokoll; Randeffekte des Exports prüfen) |
+| 1 | RACE-C (Abschluss) | 0.15 | capacity, queue | 140% | 4.15 | Kandidat | inhaber zu 140% ausgelastet (25 von 18 h/Woche); Aufmaß: 46 in der Warteschlange, ~315 h Wartezeit; Angebot: ~74 h Wartezeit; Auftrag: ~162 h Wartezeit; Median 315 h Wartezeit vor 'aufmass' (p90 615 h, 76 Fälle, Ereignisprotokoll); Rückstand wächst: 13,0 Fälle/Woche rein gegen 2,2 raus; 122 offen gegen ~11 erwartet (Ereignisprotokoll; Randeffekte des Exports prüfen) |
 | 2 | Auftragsabwicklung | 0.04 | queue | 71% | 2.04 | Kandidat | Produktion: ~130 h Wartezeit; Montage: ~208 h Wartezeit |
 | 3 | RACE-R (Reichweite) | 0.15 | – | – | 0.15 | nicht bewertet | Noch keine Kennzahlen oder Ablaufdaten |
 | 4 | RACE-A (Anfragen) | 0.15 | – | – | 0.15 | unauffällig | Kein Signal über den Schwellen |

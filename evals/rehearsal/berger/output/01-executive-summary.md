@@ -16,7 +16,7 @@ Thomas Berger (Inhaber) (inhaber) zu 140% ausgelastet in RACE-C (Abschluss) (Kon
 
 
 ## Wo wir hingeschaut haben
-- **RACE-C (Abschluss)** — Kandidat: inhaber zu 140% ausgelastet (25 von 18 h/Woche); Aufmaß: 46 in der Warteschlange, ~315 h Wartezeit; Angebot: ~74 h Wartezeit; Auftrag: ~162 h Wartezeit; Median 315 h Wartezeit vor 'aufmass' (p90 615 h, 76 Fälle, Ereignisprotokoll); Rückstand wächst: 13.0 Fälle/Woche rein gegen 2.2 raus; 122 offen gegen ~11 erwartet (Ereignisprotokoll; Randeffekte des Exports prüfen)
+- **RACE-C (Abschluss)** — Kandidat: inhaber zu 140% ausgelastet (25 von 18 h/Woche); Aufmaß: 46 in der Warteschlange, ~315 h Wartezeit; Angebot: ~74 h Wartezeit; Auftrag: ~162 h Wartezeit; Median 315 h Wartezeit vor 'aufmass' (p90 615 h, 76 Fälle, Ereignisprotokoll); Rückstand wächst: 13,0 Fälle/Woche rein gegen 2,2 raus; 122 offen gegen ~11 erwartet (Ereignisprotokoll; Randeffekte des Exports prüfen)
 - **Auftragsabwicklung** — Kandidat: Produktion: ~130 h Wartezeit; Montage: ~208 h Wartezeit
 - **RACE-A (Anfragen)** — unauffällig: Kein Signal über den Schwellen
 
@@ -30,7 +30,7 @@ inhaber (Front-End (RACE), RACE-C) ist zu 140% ausgelastet.
 
 
 ## Wert (T/I/OE)
-Monatlicher Gewinneffekt, niedrig–hoch: 25,292 – 42,879 EUR (Summe der Zeilen; gemeinsames ΔT Basis 27,161 EUR). Simuliert; Effekte sind Annahmen, bis ein Pilot sie misst.
+Monatlicher Gewinneffekt, niedrig–hoch: 25.292 – 42.879 EUR (Summe der Zeilen; gemeinsames ΔT Basis 27.161 EUR). Simuliert; Effekte sind Annahmen, bis ein Pilot sie misst.
 
 
 ## Wichtigste Risiken

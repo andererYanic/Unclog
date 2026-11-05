@@ -25,7 +25,7 @@ from enum import StrEnum
 
 from ..flow.eventlog_stats import EventLogStats
 from ..flow.graph import FlowGraph, NodeLoad, ResourceLoad
-from ..i18n import domain_label, t
+from ..i18n import domain_label, num, t
 from ..schemas.diagnosis import REQUIRED_DOMAINS, Domain, DomainName, DomainVerdict, StageMetric
 from .priors import ORDER, default_prior
 
@@ -259,9 +259,13 @@ def build_heat_table(
                         "sig_conv",
                         lang,
                         name=m.name,
-                        v=f"{m.value:g}",
+                        v=num(m.value, lang, 0)
+                        if float(m.value).is_integer()
+                        else num(m.value, lang, 3).rstrip("0").rstrip(",."),
                         unit=m.unit,
-                        b=f"{m.benchmark:g}",
+                        b=num(m.benchmark, lang, 0)
+                        if float(m.benchmark).is_integer()
+                        else num(m.benchmark, lang, 3).rstrip("0").rstrip(",."),
                         how=how,
                         est=est,
                     ),
@@ -358,8 +362,8 @@ def build_heat_table(
                         t(
                             "sig_backlog",
                             lang,
-                            i=f"{st.arrivals_per_week:.1f}",
-                            o=f"{st.completions_per_week:.1f}",
+                            i=num(st.arrivals_per_week, lang, 1),
+                            o=num(st.completions_per_week, lang, 1),
                             open=st.open_cases,
                             exp=f"{expected_wip:.0f}",
                         ),

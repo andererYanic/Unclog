@@ -284,3 +284,11 @@ def domain_label(domain: str, lang: str = "en") -> str:
 
 def verdict_label(verdict: str, lang: str = "en") -> str:
     return t("verdict_" + verdict, lang)
+
+
+def num(x: float, lang: str = "en", digits: int = 0) -> str:
+    """Number with thousands separators; German uses '.' for thousands and ',' for decimals."""
+    s = f"{x:,.{digits}f}"
+    if lang == "de":
+        s = s.replace(",", "\x00").replace(".", ",").replace("\x00", ".")
+    return s

@@ -22,6 +22,7 @@ from dataclasses import dataclass, field
 from typing import Literal
 
 from ..flow.graph import FlowGraph
+from ..i18n import num
 from ..schemas.design import (
     DeltaI,
     DeltaOE,
@@ -408,6 +409,11 @@ def _note_de(text: str) -> str:
 
 
 def to_markdown(r: ValueReport, econ: Economics, lang: str = "en") -> str:
+    de_lvl = {"low": "niedrig", "base": "Basis", "high": "hoch"}
+
+    def lvl_name(v: ValueScenario) -> str:
+        return de_lvl[v.value] if lang == "de" else v.value
+
     cur = econ.currency
     h = {
         "en": (
@@ -443,14 +449,15 @@ def to_markdown(r: ValueReport, econ: Economics, lang: str = "en") -> str:
     for p in r.per_opportunity:
         for ln in p.lines:
             out.append(
-                f"| {p.opportunity_id} | {ln.scenario.value} | {ln.delta_t:,.0f} | "
-                f"{ln.delta_oe_realized:,.0f} | {ln.delta_i_carrying:,.0f} | "
-                f"{ln.run_cost:,.0f} | {ln.amortized_build:,.0f} | "
-                f"**{ln.delta_profit:,.0f}** | {p.first_year[ln.scenario]:,.0f} |"
+                f"| {p.opportunity_id} | {lvl_name(ln.scenario)} | {num(ln.delta_t, lang)} | "
+                f"{num(ln.delta_oe_realized, lang)} | {num(ln.delta_i_carrying, lang)} | "
+                f"{num(ln.run_cost, lang)} | {num(ln.amortized_build, lang)} | "
+                f"**{num(ln.delta_profit, lang)}** | {num(p.first_year[ln.scenario], lang)} |"
             )
     out += [
         "",
-        f"{h[10]} ({cur}): " + ", ".join(f"{k.value} {v:,.0f}" for k, v in r.portfolio.items()),
+        f"{h[10]} ({cur}): "
+        + ", ".join(f"{lvl_name(k)} {num(v, lang)}" for k, v in r.portfolio.items()),
     ]
     tr = _note_de if lang == "de" else (lambda x: x)
     out += [f"- {tr(d)}" for d in r.model.dedup_notes]
@@ -458,7 +465,7 @@ def to_markdown(r: ValueReport, econ: Economics, lang: str = "en") -> str:
         out += ["", f"**{h[9]}:**"]
         out += [
             f"- {m.opportunity_id}: {m.capacity_released_h:g} h/week, claimed "
-            f"{m.claimed_amount:,.0f} {cur}/month → 0 ({m.reason})"
+            f"{num(m.claimed_amount, lang)} {cur}/month → 0 ({m.reason})"
             for m in r.model.mirage_ledger
         ]
     notes = [f"{p.opportunity_id}: {tr(n)}" for p in r.per_opportunity for n in p.notes]
